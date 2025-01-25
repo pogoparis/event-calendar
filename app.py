@@ -85,18 +85,26 @@ def validate_phone(form, field):
 
 def validate_date(form, field):
     """
-    Valide que la date est dans le futur si elle est renseignée
+    Valide que la date est au format JJ/MM/AAAA et dans le futur
     """
     if field.data:
+        # Supprimer les espaces avant et après
+        date_str = field.data.strip()
+        
+        # Vérifier le format exact
+        if not re.match(r'^\d{2}/\d{2}/\d{4}$', date_str):
+            raise ValidationError('Format de date invalide. Utilisez JJ/MM/AAAA (exemple : 25/01/2025)')
+        
         try:
-            # Convertir la chaîne en date
-            date = datetime.strptime(field.data, '%Y-%m-%d').date()
+            # Validation du format JJ/MM/AAAA
+            parsed_date = datetime.strptime(date_str, '%d/%m/%Y').date()
             
             # Vérifier que la date n'est pas dans le passé
-            if date < datetime.now().date():
+            if parsed_date < datetime.now().date():
                 raise ValidationError('La date de l\'événement doit être dans le futur ou aujourd\'hui.')
+        
         except ValueError:
-            raise ValidationError('Format de date invalide. Utilisez AAAA-MM-JJ')
+            raise ValidationError('Date invalide. Vérifiez que la date existe réellement.')
 
 def validate_time(form, field):
     """
@@ -115,22 +123,6 @@ class ProfileForm(FlaskForm):
     phone = StringField('Téléphone', validators=[validate_phone])
     new_password = PasswordField('Nouveau mot de passe')
     submit = SubmitField('Mettre à jour')
-
-class EventForm(FlaskForm):
-    title = StringField('Titre', validators=[DataRequired()])
-    description = TextAreaField('Description', validators=[DataRequired()])
-    
-    # Séparer date et heure
-    event_date = StringField('Date', validators=[validate_date])
-    event_time = StringField('Heure', validators=[validate_time])
-    
-    location = StringField('Lieu')
-    address = StringField('Adresse')
-    organizer = StringField('Organisateur')
-    capacity = IntegerField('Capacité', validators=[Optional()])
-    price = FloatField('Prix', validators=[Optional()])
-    additional_info = TextAreaField('Informations supplémentaires')
-    submit = SubmitField('Enregistrer les modifications')
 
 class CreateEventForm(FlaskForm):
     title = StringField('Titre', validators=[DataRequired(message='Le titre est obligatoire')])
@@ -163,6 +155,9 @@ class CreateEventForm(FlaskForm):
     
     additional_info = TextAreaField('Informations supplémentaires')
     submit = SubmitField('Créer l\'événement')
+
+# Utiliser le même formulaire pour la modification
+EventForm = CreateEventForm
 
 @app.route('/')
 def index():
@@ -285,7 +280,7 @@ def create_event():
     if form.validate_on_submit():
         try:
             # Convertir la date et l'heure
-            event_datetime = datetime.strptime(f"{form.event_date.data} {form.event_time.data}", '%Y-%m-%d %H:%M')
+            event_datetime = datetime.strptime(f"{form.event_date.data} {form.event_time.data}", '%d/%m/%Y %H:%M')
             
             # Créer un nouvel événement
             new_event = Event(
@@ -334,7 +329,7 @@ def edit_event(event_id):
             
             # Convertir la date si nécessaire
             if form.event_date.data and form.event_time.data:
-                event.date = datetime.strptime(f"{form.event_date.data} {form.event_time.data}", '%Y-%m-%d %H:%M')
+                event.date = datetime.strptime(f"{form.event_date.data} {form.event_time.data}", '%d/%m/%Y %H:%M')
             
             db.session.commit()
             flash('Événement modifié avec succès', 'success')

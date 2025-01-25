@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <h1>Modifier l'événement</h1>
@@ -37,8 +44,9 @@
                     <div class="col-md-6 mb-3">
                         {{ form.event_date.label(class="form-label") }}
                         {{ form.event_date(class="form-control", 
-                                           type="date", 
-                                           value=event.date.strftime('%Y-%m-%d')) }}
+                                           id="datepicker", 
+                                           value=event.date.strftime('%d/%m/%Y'), 
+                                           placeholder="JJ/MM/AAAA") }}
                         {% if form.event_date.errors %}
                             <div class="text-danger">
                                 {% for error in form.event_date.errors %}
@@ -66,6 +74,13 @@
                 <div class="mb-3">
                     {{ form.location.label(class="form-label") }}
                     {{ form.location(class="form-control") }}
+                    {% if form.location.errors %}
+                        <div class="text-danger">
+                            {% for error in form.location.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
                 
                 <div class="mb-3">
@@ -82,12 +97,26 @@
                 
                 <div class="mb-3">
                     {{ form.capacity.label(class="form-label") }}
-                    {{ form.capacity(class="form-control", type="number") }}
+                    {{ form.capacity(class="form-control", type="number", min="1") }}
+                    {% if form.capacity.errors %}
+                        <div class="text-danger">
+                            {% for error in form.capacity.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
                 
                 <div class="mb-3">
                     {{ form.price.label(class="form-label") }}
-                    {{ form.price(class="form-control", type="number", step="0.01") }}
+                    {{ form.price(class="form-control", type="number", step="0.01", min="0") }}
+                    {% if form.price.errors %}
+                        <div class="text-danger">
+                            {% for error in form.price.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
                 
                 <div class="mb-3">
@@ -101,4 +130,15 @@
         <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-secondary ms-2">Annuler</a>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialiser Flatpickr
+    flatpickr("#datepicker", {
+        dateFormat: "d/m/Y",  // Format JJ/MM/AAAA
+        locale: "fr",         // Langue française
+        minDate: "today"      // Interdire les dates passées
+    });
+</script>
 {% endblock %}
