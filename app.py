@@ -451,7 +451,7 @@ def event_detail(event_id):
                            user_registrations=user_registrations,
                            form=form)
 
-@app.route('/event/register/<int:event_id>', methods=['POST'])
+@app.route('/event/register/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def register_event(event_id):
     event = Event.query.get_or_404(event_id)
@@ -731,6 +731,46 @@ def archive_event(event_id):
     status = 'archivé' if not event.is_active else 'réactivé'
     flash(f'L\'événement a été {status} avec succès.', 'success')
     return redirect(url_for('list_events'))
+
+def create_super_admin(username='pogoparis', email='admin@example.com', password='AdminPassword123!'):
+    """
+    Crée un super administrateur rapidement pour le développement et le test.
+    
+    :param username: Nom d'utilisateur du super admin
+    :param email: Email du super admin
+    :param password: Mot de passe du super admin
+    :return: L'utilisateur créé ou existant
+    """
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        print(f"Utilisateur {username} existe déjà.")
+        return existing_user
+    
+    new_user = User(
+        username=username,
+        email=email,
+        password_hash=generate_password_hash(password),
+        is_admin=True
+    )
+    
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        print(f"Super administrateur {username} créé avec succès !")
+        return new_user
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erreur lors de la création du super administrateur : {e}")
+        return None
+
+@app.cli.command("create-super-admin")
+def cli_create_super_admin():
+    """
+    Commande CLI pour créer un super administrateur.
+    Peut être appelée avec : flask create-super-admin
+    """
+    with app.app_context():
+        create_super_admin()
 
 if __name__ == '__main__':
     with app.app_context():
