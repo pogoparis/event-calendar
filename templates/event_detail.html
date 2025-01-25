@@ -1,35 +1,140 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="card">
-    <div class="card-body">
-        <h1 class="card-title">{{ event.title }}</h1>
-        <p class="text-muted">Date: {{ event.date.strftime('%d/%m/%Y %H:%M') }}</p>
-        <p class="card-text">{{ event.description }}</p>
-        
-        {% if current_user.is_authenticated %}
-            {% if not current_user.registrations|selectattr("event_id", "equalto", event.id)|list %}
-                <a href="{{ url_for('register_event', event_id=event.id) }}" class="btn btn-primary">S'inscrire à l'événement</a>
-            {% else %}
-                <button class="btn btn-success" disabled>Déjà inscrit</button>
-            {% endif %}
-        {% else %}
-            <a href="{{ url_for('login') }}" class="btn btn-primary">Connectez-vous pour vous inscrire</a>
-        {% endif %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card {% if event.is_past_event %}bg-light text-muted{% endif %}">
+                {% if event.is_past_event %}
+                    <div class="alert alert-secondary text-center">
+                        Événement passé
+                    </div>
+                {% endif %}
+                
+                <div class="card-header">
+                    <h1 class="card-title">{{ event.title }}</h1>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h3>Description</h3>
+                            <p>{{ event.description }}</p>
+                            
+                            <h3>Détails</h3>
+                            <ul class="list-unstyled">
+                                <li><strong>Date :</strong> {{ event.date.strftime('%d/%m/%Y à %H:%M') }}</li>
+                                <li><strong>Lieu :</strong> {{ event.location }}</li>
+                                <li><strong>Adresse :</strong> {{ event.address }}</li>
+                                <li><strong>Organisateur :</strong> {{ event.organizer }}</li>
+                                <li><strong>Prix :</strong> {{ event.price }} €</li>
+                                <li><strong>Capacité :</strong> {{ event.capacity }} places</li>
+                            </ul>
+                            
+                            {% if event.additional_info %}
+                                <h3>Informations supplémentaires</h3>
+                                <p>{{ event.additional_info }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div id="map" style="height: 300px; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; text-align: center;">
+                                <div>
+                                    <h5>Localisation</h5>
+                                    <p><strong>{{ event.location }}</strong></p>
+                                    <p>{{ event.address }}</p>
+                                    <a href="https://www.google.com/maps/search/?api=1&query={{ event.address|urlencode }}" 
+                                       target="_blank" class="btn btn-primary btn-sm mt-2">
+                                        Voir sur Google Maps
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if not event.is_past_event %}
+                        {% if current_user.is_authenticated %}
+                            {% if event.id in user_registrations %}
+                                <div class="alert alert-success mt-3">
+                                    Vous êtes inscrit à cet événement
+                                    <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}" class="d-inline ms-2">
+                                        <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <a href="{{ url_for('register_event', event_id=event.id) }}" class="btn btn-primary mt-3">S'inscrire</a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-secondary mt-3">Connectez-vous pour vous inscrire</a>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-warning mt-3">
+                            Cet événement est terminé. Les inscriptions sont closes.
+                        </div>
+                    {% endif %}
+                    
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                        <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-warning mt-3">Modifier l'événement</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-{% if current_user.is_admin %}
-<div class="mt-4">
-    <h3>Participants inscrits</h3>
-    <ul class="list-group">
-        {% for registration in event.registrations %}
-        <li class="list-group-item">
-            {{ registration.user.username }} ({{ registration.user.email }})
-            <small class="text-muted">Inscrit le {{ registration.registration_date.strftime('%d/%m/%Y') }}</small>
-        </li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
+<!-- Google Maps Script -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&libraries=geocoding"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function initMap() {
+        var location = "{{ event.address }}";
+        var mapDiv = document.getElementById('map');
+        var geocoder = new google.maps.Geocoder();
+
+        // Vérifier si l'adresse est vide
+        if (!location) {
+            mapDiv.innerHTML = 'Aucune adresse disponible';
+            return;
+        }
+
+        geocoder.geocode({ 'address': location }, function(results, status) {
+            if (status === 'OK') {
+                // Effacer le contenu existant
+                mapDiv.innerHTML = '';
+                
+                var map = new google.maps.Map(mapDiv, {
+                    zoom: 15,
+                    center: results[0].geometry.location
+                });
+                
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: results[0].geometry.location,
+                    title: "{{ event.title }}"
+                });
+                
+                // Ajouter une info-bulle
+                var infowindow = new google.maps.InfoWindow({
+                    content: `<h6>{{ event.title }}</h6><p>{{ event.address }}</p>`
+                });
+                
+                marker.addListener('click', function() {
+                    infowindow.open(map, marker);
+                });
+            } else {
+                mapDiv.innerHTML = 'Impossible de localiser l\'adresse : ' + status;
+                console.error('Geocoding failed: ' + status);
+            }
+        });
+    }
+
+    // Charger la carte
+    if (window.google && window.google.maps) {
+        initMap();
+    } else {
+        console.error('Google Maps API non chargé');
+        document.getElementById('map').innerHTML = 'Erreur de chargement de Google Maps';
+    }
+});
+</script>
 {% endblock %}

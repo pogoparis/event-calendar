@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Profil de {{ user.username }}</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Informations personnelles</h2>
+            <form method="POST">
+                {{ form.csrf_token }}
+                
+                <div class="mb-3">
+                    <label for="{{ form.first_name.id }}" class="form-label">Prénom</label>
+                    {{ form.first_name(class="form-control", value=user.first_name or '') }}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.last_name.id }}" class="form-label">Nom</label>
+                    {{ form.last_name(class="form-control", value=user.last_name or '') }}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.phone.id }}" class="form-label">Téléphone</label>
+                    {{ form.phone(class="form-control", value=user.phone or '') }}
+                    {% if form.phone.errors %}
+                        <div class="text-danger">
+                            {% for error in form.phone.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-text text-muted">Format : 0612345678 ou +33 6 12 34 56 78</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.new_password.id }}" class="form-label">Nouveau mot de passe (optionnel)</label>
+                    {{ form.new_password(class="form-control") }}
+                </div>
+                
+                {{ form.submit(class="btn btn-primary") }}
+            </form>
+        </div>
+        
+        <div class="col-md-6">
+            <h2>Événements inscrits</h2>
+            {% if registered_events %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in registered_events %}
+                        <tr>
+                            <td>{{ event.title }}</td>
+                            <td>{{ event.date.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Vous n'êtes inscrit à aucun événement.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

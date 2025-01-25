@@ -1,20 +1,54 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="mb-4">Événements à venir</h1>
-
-<div class="row">
-    {% for event in events %}
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">{{ event.title }}</h5>
-                <p class="card-text">{{ event.description[:100] }}...</p>
-                <p class="card-text"><small class="text-muted">Date: {{ event.date.strftime('%d/%m/%Y %H:%M') }}</small></p>
-                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-primary">Plus d'infos</a>
+<div class="container mt-4">
+    <h1>Événements</h1>
+    
+    <div class="row">
+        {% for event in events %}
+        <div class="col-md-4 mb-4">
+            {% if event.is_past_event %}
+                <div class="alert alert-secondary text-center mb-2">
+                    Événement passé
+                </div>
+            {% endif %}
+            <div class="card position-relative {% if event.is_past_event %}bg-light text-muted{% endif %}">
+                {% if current_user.is_authenticated and event.id in user_registrations and not event.is_past_event %}
+                    <span class="badge bg-success position-absolute top-0 end-0 m-2">Inscrit</span>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ event.title }}</h5>
+                    <p class="card-text">{{ event.description }}</p>
+                    <p>
+                        <strong>Date:</strong> {{ event.date.strftime('%d/%m/%Y %H:%M') }}
+                        {% if event.is_past_event %}
+                            <span class="text-muted">(Terminé)</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Lieu:</strong> {{ event.location }}</p>
+                    <p><strong>Adresse:</strong> {{ event.address }}</p>
+                    <p><strong>Organisateur:</strong> {{ event.organizer }}</p>
+                    
+                    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-secondary btn-sm mb-2">En savoir plus</a>
+                    
+                    {% if current_user.is_authenticated %}
+                        {% if event.id in user_registrations and not event.is_past_event %}
+                            <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
+                            </form>
+                        {% elif not event.is_past_event %}
+                            <a href="{{ url_for('register_event', event_id=event.id) }}" class="btn btn-primary">S'inscrire</a>
+                        {% endif %}
+                    {% else %}
+                        {% if not event.is_past_event %}
+                            <a href="{{ url_for('login') }}" class="btn btn-secondary">Connectez-vous pour vous inscrire</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
 {% endblock %}
