@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement du fichier .env
+load_dotenv()
 
 class Config:
     # Clé API Google Maps

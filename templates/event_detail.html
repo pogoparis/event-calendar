@@ -24,7 +24,30 @@
             border-style: solid;
             border-color: #007bff transparent;
         }
+        
+        #map {
+            height: 400px;
+            width: 100%;
+        }
     </style>
+{% endblock %}
+
+{% block google_maps_script %}
+{% if event.address and config.GOOGLE_MAPS_API_KEY %}
+<script>
+(function() {
+    var script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&libraries=geocoding&callback=initMap';
+    script.async = true;
+    script.defer = true;
+    script.onerror = function() {
+        console.error('Impossible de charger le script Google Maps');
+        displayMapError('Erreur de chargement de Google Maps');
+    };
+    document.head.appendChild(script);
+})();
+</script>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -160,18 +183,46 @@
             </div>
         </div>
     </div>
+
+    {% if event.address and config.GOOGLE_MAPS_API_KEY %}
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Localisation</h3>
+                </div>
+                <div class="card-body">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
-<!-- Google Maps Script -->
-<script src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&libraries=geocoding"></script>
 <script>
 function initMap() {
+    console.log('Initialisation de la carte Google Maps');
+    console.log('Clé API utilisée :', '{{ config.GOOGLE_MAPS_API_KEY }}');
+    console.log('Adresse de l\'événement :', "{{ event.address }}");
+    
+    // Vérification de la présence de l'API Google Maps
+    if (typeof google === 'undefined' || !google.maps) {
+        console.error('Google Maps API non chargée');
+        displayMapError('Impossible de charger la carte Google Maps');
+        return;
+    }
+
     const eventAddress = "{{ event.address }}";
     const geocoder = new google.maps.Geocoder();
 
     geocoder.geocode({ address: eventAddress }, (results, status) => {
-        if (status === "OK") {
-            const map = new google.maps.Map(document.getElementById("map"), {
+        const mapContainer = document.getElementById("map");
+        
+        console.log('Résultat du géocodage :', { results, status });
+        
+        if (status === "OK" && results[0]) {
+            const map = new google.maps.Map(mapContainer, {
                 zoom: 15,
                 center: results[0].geometry.location
             });
@@ -182,14 +233,27 @@ function initMap() {
                 title: "{{ event.title }}"
             });
         } else {
-            console.error("Geocode was not successful for the following reason: " + status);
-            document.getElementById("map").innerHTML = "Impossible de localiser l'adresse";
+            console.error("Geocodage impossible : " + status);
+            displayMapError('Impossible de localiser l\'adresse : ' + status);
         }
     });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    initMap();
-});
+function displayMapError(message) {
+    const mapContainer = document.getElementById("map");
+    mapContainer.innerHTML = `
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle"></i> 
+            ${message}
+        </div>
+    `;
+    mapContainer.style.height = '100px';
+}
+
+// Gestion des erreurs de chargement de l'API
+window.gm_authFailure = function() {
+    console.error('Échec de l\'authentification Google Maps');
+    displayMapError('Erreur d\'authentification Google Maps. Vérifiez votre clé API.');
+};
 </script>
 {% endblock %}

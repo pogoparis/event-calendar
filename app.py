@@ -4,29 +4,25 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeField, FloatField, IntegerField, HiddenField, SelectField
-from wtforms.validators import DataRequired, Email, Length, ValidationError, Regexp, Optional, URL, NumberRange
-from dotenv import load_dotenv
-import os
+from wtforms import StringField, PasswordField, TextAreaField, IntegerField, FloatField, SelectField, SubmitField, HiddenField, DateTimeField
+from wtforms.validators import DataRequired, Optional, ValidationError, Email, Length, Regexp, URL, NumberRange
+from datetime import datetime, timedelta
+import logging
 import re
-from datetime import datetime
+import os
+from dotenv import load_dotenv
+from config import Config
 
 load_dotenv()
 
+# Configuration de l'application
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///event_manager.db'
+app.config.from_object(Config)
 
-import logging
-from logging.handlers import RotatingFileHandler
-
+# Configuration du logging
 def setup_logging(app):
-    handler = RotatingFileHandler('event_manager.log', maxBytes=10000, backupCount=1)
+    handler = logging.StreamHandler()
     handler.setLevel(logging.INFO)
-    
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    
     app.logger.addHandler(handler)
     app.logger.setLevel(logging.INFO)
 
@@ -454,9 +450,14 @@ def event_detail(event_id):
 @app.route('/event/register/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def register_event(event_id):
+    app.logger.info(f"Tentative d'inscription à l'événement {event_id}")
+    app.logger.info(f"Méthode de requête : {request.method}")
+    app.logger.info(f"Utilisateur connecté : {current_user.username}")
+    
     event = Event.query.get_or_404(event_id)
     
     if not event.is_active:
+        app.logger.warning(f"Événement {event_id} n'est plus actif")
         flash('Cet événement n\'est plus disponible.', 'danger')
         return redirect(request.referrer or url_for('index'))
     
@@ -466,10 +467,12 @@ def register_event(event_id):
     ).first()
     
     if existing_registration:
+        app.logger.warning(f"Utilisateur déjà inscrit à l'événement {event_id}")
         flash('Vous êtes déjà inscrit à cet événement', 'danger')
         return redirect(request.referrer or url_for('index'))
     
     if not event.is_registration_possible():
+        app.logger.warning(f"Événement {event_id} complet")
         flash('Désolé, cet événement est complet.', 'danger')
         return redirect(request.referrer or url_for('index'))
     
@@ -486,15 +489,19 @@ def register_event(event_id):
         
         if remaining_spots is not None:
             if remaining_spots > 0:
+                app.logger.info(f"Inscription réussie à l'événement {event_id}. Places restantes : {remaining_spots}")
                 flash(f'Inscription réussie ! Il reste {remaining_spots} place(s) disponible(s).', 'success')
             else:
+                app.logger.info(f"Inscription réussie à l'événement {event_id}. Événement complet")
                 flash('Inscription réussie ! L\'événement est maintenant complet.', 'success')
         else:
+            app.logger.info(f"Inscription réussie à l'événement {event_id}")
             flash('Inscription réussie !', 'success')
         
         return redirect(request.referrer or url_for('index'))
     
     except Exception as e:
+        app.logger.error(f"Erreur lors de l'inscription à l'événement {event_id}: {str(e)}")
         db.session.rollback()
         flash(f'Erreur lors de l\'inscription : {str(e)}', 'danger')
         return redirect(request.referrer or url_for('index'))
