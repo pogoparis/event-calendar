@@ -7,16 +7,19 @@
             <div class="card-body">
                 <h2 class="card-title text-center mb-4">Connexion</h2>
                 <form method="POST">
+                    {% if form.csrf_token %}
+                        {{ form.csrf_token }}
+                    {% endif %}
                     <div class="mb-3">
-                        <label for="username" class="form-label">Nom d'utilisateur</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
+                        <label for="username" class="form-label">{{ form.username.label }}</label>
+                        {{ form.username(class="form-control", required=true) }}
                     </div>
                     <div class="mb-3">
-                        <label for="password" class="form-label">Mot de passe</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <label for="password" class="form-label">{{ form.password.label }}</label>
+                        {{ form.password(class="form-control", required=true) }}
                     </div>
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Se connecter</button>
+                        {{ form.submit(class="btn btn-primary") }}
                     </div>
                 </form>
                 <div class="text-center mt-3">

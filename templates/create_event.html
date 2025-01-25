@@ -124,8 +124,10 @@
             </div>
         </div>
         
-        {{ form.submit(class="btn btn-primary") }}
-        <a href="{{ url_for('admin') }}" class="btn btn-secondary ms-2">Annuler</a>
+        <div class="d-grid">
+            {{ form.submit(class="btn btn-primary") }}
+            <a href="{{ url_for('admin') }}" class="btn btn-secondary ms-2">Annuler</a>
+        </div>
     </form>
 </div>
 {% endblock %}

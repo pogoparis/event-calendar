@@ -19,11 +19,14 @@
                     <div class="text-muted me-3">
                         <strong>Lieu :</strong> {{ event.location }}
                     </div>
-                    <form action="{{ url_for('archive_event', event_id=event.id) }}" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Voulez-vous vraiment désarchiver cet événement ?')">
-                            <i class="fas fa-undo"></i> Désarchiver
-                        </button>
-                    </form>
+                    {% if current_user.is_admin or current_user.is_superadmin %}
+                        <form method="POST" action="{{ url_for('archive_event', event_id=event.id) }}" class="d-inline">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Voulez-vous vraiment désarchiver cet événement ?')">
+                                <i class="fas fa-undo"></i> Désarchiver
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from flask import current_app
 
 # Configuration spécifique aux tests
-app.config['WTF_CSRF_ENABLED'] = False
+app.config['WTF_CSRF_ENABLED'] = True
 app.config['SECRET_KEY'] = 'test_secret_key'
 
 class TestEditEventFormValidation(unittest.TestCase):

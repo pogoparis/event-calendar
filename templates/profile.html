@@ -8,20 +8,26 @@
         <div class="col-md-6">
             <h2>Informations personnelles</h2>
             <form method="POST">
+                {{ form.hidden_tag() }}
                 {{ form.csrf_token }}
                 
                 <div class="mb-3">
-                    <label for="{{ form.first_name.id }}" class="form-label">Prénom</label>
+                    <label for="username" class="form-label">{{ form.username.label }}</label>
+                    {{ form.username(class="form-control", value=user.username) }}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="first_name" class="form-label">{{ form.first_name.label }}</label>
                     {{ form.first_name(class="form-control", value=user.first_name or '') }}
                 </div>
                 
                 <div class="mb-3">
-                    <label for="{{ form.last_name.id }}" class="form-label">Nom</label>
+                    <label for="last_name" class="form-label">{{ form.last_name.label }}</label>
                     {{ form.last_name(class="form-control", value=user.last_name or '') }}
                 </div>
                 
                 <div class="mb-3">
-                    <label for="{{ form.phone.id }}" class="form-label">Téléphone</label>
+                    <label for="phone" class="form-label">{{ form.phone.label }}</label>
                     {{ form.phone(class="form-control", value=user.phone or '') }}
                     {% if form.phone.errors %}
                         <div class="text-danger">
@@ -34,11 +40,14 @@
                 </div>
                 
                 <div class="mb-3">
-                    <label for="{{ form.new_password.id }}" class="form-label">Nouveau mot de passe (optionnel)</label>
+                    <label for="new_password" class="form-label">{{ form.new_password.label }}</label>
                     {{ form.new_password(class="form-control") }}
+                    <small class="form-text text-muted">Laissez vide si vous ne souhaitez pas modifier votre mot de passe</small>
                 </div>
                 
-                {{ form.submit(class="btn btn-primary") }}
+                <div class="d-grid">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
             </form>
         </div>
         

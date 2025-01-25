@@ -7,6 +7,7 @@
             <h1>{{ event.title }}</h1>
             {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_super_admin) %}
                 <form action="{{ url_for('archive_event', event_id=event.id) }}" method="POST" class="d-inline">
+                    {{ form.csrf_token }}
                     {% if event.is_active %}
                     <button type="submit" class="btn btn-secondary" onclick="return confirm('Voulez-vous vraiment archiver cet événement ?')">
                         <i class="fas fa-archive"></i> Archiver l'événement
@@ -88,29 +89,34 @@
                             {% if event.id in user_registrations %}
                                 <div class="alert alert-success mt-3">
                                     Vous êtes inscrit à cet événement
-                                    <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}" class="d-inline ms-2">
-                                        <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
+                                    <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}">
+                                        {{ form.hidden_tag() }}
+                                        <div class="d-grid">
+                                            {{ form.submit(class="btn btn-warning") }}
+                                        </div>
                                     </form>
                                 </div>
                             {% else %}
                                 {% set remaining_spots = event.get_remaining_spots() %}
                                 {% if remaining_spots is none or remaining_spots > 0 %}
                                     <form method="POST" action="{{ url_for('register_event', event_id=event.id) }}" class="mt-3">
-                                        <button type="submit" class="btn btn-primary">
-                                            S'inscrire 
-                                            {% if remaining_spots is not none %}
-                                                ({{ remaining_spots }} place(s) restante(s))
-                                            {% endif %}
-                                        </button>
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary">
+                                                S'inscrire 
+                                                {% if remaining_spots is not none %}
+                                                    ({{ remaining_spots }} place(s))
+                                                {% endif %}
+                                            </button>
+                                        </div>
                                     </form>
                                 {% else %}
-                                    <div class="alert alert-danger mt-3">
-                                        Désolé, cet événement est complet
-                                    </div>
+                                    <div class="alert alert-danger mt-3">Événement complet</div>
                                 {% endif %}
                             {% endif %}
                         {% else %}
-                            <a href="{{ url_for('login') }}" class="btn btn-secondary mt-3">Connectez-vous pour vous inscrire</a>
+                            <div class="alert alert-info mt-3">
+                                <a href="{{ url_for('login') }}" class="btn btn-primary">Connectez-vous pour vous inscrire</a>
+                            </div>
                         {% endif %}
                     {% else %}
                         <div class="alert alert-warning mt-3">
