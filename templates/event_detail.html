@@ -1,5 +1,32 @@
 {% extends "base.html" %}
 
+{% block head %}
+    {{ super() }}
+    <style>
+        .custom-marker {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            min-width: 100px;
+            text-align: center;
+            position: relative;
+        }
+        .custom-marker::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #007bff transparent;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row mb-4">
@@ -138,56 +165,31 @@
 <!-- Google Maps Script -->
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}&libraries=geocoding"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    function initMap() {
-        var location = "{{ event.address }}";
-        var mapDiv = document.getElementById('map');
-        var geocoder = new google.maps.Geocoder();
+function initMap() {
+    const eventAddress = "{{ event.address }}";
+    const geocoder = new google.maps.Geocoder();
 
-        // Vérifier si l'adresse est vide
-        if (!location) {
-            mapDiv.innerHTML = 'Aucune adresse disponible';
-            return;
+    geocoder.geocode({ address: eventAddress }, (results, status) => {
+        if (status === "OK") {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 15,
+                center: results[0].geometry.location
+            });
+
+            new google.maps.Marker({
+                map: map,
+                position: results[0].geometry.location,
+                title: "{{ event.title }}"
+            });
+        } else {
+            console.error("Geocode was not successful for the following reason: " + status);
+            document.getElementById("map").innerHTML = "Impossible de localiser l'adresse";
         }
+    });
+}
 
-        geocoder.geocode({ 'address': location }, function(results, status) {
-            if (status === 'OK') {
-                // Effacer le contenu existant
-                mapDiv.innerHTML = '';
-                
-                var map = new google.maps.Map(mapDiv, {
-                    zoom: 15,
-                    center: results[0].geometry.location
-                });
-                
-                var marker = new google.maps.Marker({
-                    map: map,
-                    position: results[0].geometry.location,
-                    title: "{{ event.title }}"
-                });
-                
-                // Ajouter une info-bulle
-                var infowindow = new google.maps.InfoWindow({
-                    content: `<h6>{{ event.title }}</h6><p>{{ event.address }}</p>`
-                });
-                
-                marker.addListener('click', function() {
-                    infowindow.open(map, marker);
-                });
-            } else {
-                mapDiv.innerHTML = 'Impossible de localiser l\'adresse : ' + status;
-                console.error('Geocoding failed: ' + status);
-            }
-        });
-    }
-
-    // Charger la carte
-    if (window.google && window.google.maps) {
-        initMap();
-    } else {
-        console.error('Google Maps API non chargé');
-        document.getElementById('map').innerHTML = 'Erreur de chargement de Google Maps';
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
 });
 </script>
 {% endblock %}
