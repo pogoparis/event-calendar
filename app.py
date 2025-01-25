@@ -3,18 +3,26 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeField, FloatField, IntegerField
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Regexp, Optional, URL
 import re
 from wtforms.validators import NumberRange
+from dotenv import load_dotenv
+import os
+from config import DevelopmentConfig
+
+# Charger les variables d'environnement du fichier .env
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(24)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['GOOGLE_MAPS_API_KEY'] = 'AIzaSyBgr-XvksV_FShQH-I99HySlKRlSvc2pAM'  # Placez votre clé API Google Maps ici
+app.config.from_object(DevelopmentConfig)
+
+# Surcharger certaines configurations depuis les variables d'environnement
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///event_manager.db'
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
@@ -442,6 +450,7 @@ def event_detail(event_id):
     
     return render_template('event_detail.html', 
                            event=event, 
+                           config={'GOOGLE_MAPS_API_KEY': app.config['GOOGLE_MAPS_API_KEY']},
                            user_registrations=user_registrations)
 
 @app.route('/event/register/<int:event_id>', methods=['POST'])
