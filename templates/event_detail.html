@@ -2,6 +2,25 @@
 
 {% block content %}
 <div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1>{{ event.title }}</h1>
+            {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_super_admin) %}
+                <form action="{{ url_for('archive_event', event_id=event.id) }}" method="POST" class="d-inline">
+                    {% if event.is_active %}
+                    <button type="submit" class="btn btn-secondary" onclick="return confirm('Voulez-vous vraiment archiver cet événement ?')">
+                        <i class="fas fa-archive"></i> Archiver l'événement
+                    </button>
+                    {% else %}
+                    <button type="submit" class="btn btn-success" onclick="return confirm('Voulez-vous vraiment désarchiver cet événement ?')">
+                        <i class="fas fa-undo"></i> Désarchiver l'événement
+                    </button>
+                    {% endif %}
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div class="card {% if event.is_past_event %}bg-light text-muted{% endif %}">
@@ -74,7 +93,9 @@
                     {% endif %}
                     
                     {% if current_user.is_authenticated and current_user.is_admin %}
-                        <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-warning mt-3">Modifier l'événement</a>
+                        <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-warning mt-3">
+                            <i class="fas fa-edit"></i> Modifier l'événement
+                        </a>
                     {% endif %}
                 </div>
             </div>

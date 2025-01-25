@@ -20,6 +20,137 @@ migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# Constantes pour les messages d'erreur
+ERROR_MESSAGES = {
+    'title_required': 'Le titre est obligatoire',
+    'description_required': 'La description est obligatoire',
+    'date_required': 'La date est obligatoire',
+    'date_format': 'Format de date invalide. Utilisez JJ/MM/AAAA (exemple : 25/01/2025)',
+    'date_past': 'La date de l\'événement doit être dans le futur ou aujourd\'hui.',
+    'date_invalid': 'Date invalide. Vérifiez que la date existe réellement.',
+    'time_format': 'Format d\'heure invalide. Utilisez HH:MM',
+    'location_required': 'Le lieu est obligatoire',
+    'capacity_positive': 'La capacité doit être un nombre strictement positif',
+    'price_non_negative': 'Le prix doit être un nombre non négatif'
+}
+
+def validate_phone(form, field):
+    """
+    Valide un numéro de téléphone français.
+    
+    Formats acceptés : 
+    - +33 6 12 34 56 78
+    - 0612345678
+    - 06 12 34 56 78
+    
+    Args:
+        form: Le formulaire en cours de validation
+        field: Le champ de téléphone à valider
+    
+    Raises:
+        ValidationError: Si le numéro de téléphone ne correspond pas au format attendu
+    """
+    phone_regex = r'^(\+33|0)[1-9](\s?[0-9]{2}){4}$'
+    if field.data and not re.match(phone_regex, field.data):
+        raise ValidationError('Numéro de téléphone invalide. Format attendu : 0612345678 ou +33 6 12 34 56 78')
+
+def validate_date(form, field):
+    """
+    Valide que la date est au format JJ/MM/AAAA et dans le futur.
+    
+    Args:
+        form: Le formulaire en cours de validation
+        field: Le champ de date à valider
+    
+    Raises:
+        ValidationError: Si la date ne respecte pas les critères de validation
+    """
+    if field.data:
+        # Supprimer les espaces avant et après
+        date_str = field.data.strip()
+        
+        # Vérifier le format exact
+        if not re.match(r'^\d{2}/\d{2}/\d{4}$', date_str):
+            raise ValidationError(ERROR_MESSAGES['date_format'])
+        
+        try:
+            # Validation du format JJ/MM/AAAA
+            parsed_date = datetime.strptime(date_str, '%d/%m/%Y').date()
+            
+            # Vérifier que la date n'est pas dans le passé
+            if parsed_date < datetime.now().date():
+                raise ValidationError(ERROR_MESSAGES['date_past'])
+        
+        except ValueError:
+            raise ValidationError(ERROR_MESSAGES['date_invalid'])
+
+def validate_time(form, field):
+    """
+    Valide le format de l'heure.
+    
+    Args:
+        form: Le formulaire en cours de validation
+        field: Le champ de temps à valider
+    
+    Raises:
+        ValidationError: Si l'heure ne respecte pas le format HH:MM
+    """
+    if field.data:
+        # Expression régulière pour forcer HH:MM avec un zéro devant
+        time_regex = r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+        
+        if not re.match(time_regex, field.data):
+            raise ValidationError(ERROR_MESSAGES['time_format'])
+
+def validate_capacity(form, field):
+    """
+    Valide la capacité de l'événement.
+    
+    Args:
+        form: Le formulaire en cours de validation
+        field: Le champ de capacité à valider
+    
+    Raises:
+        ValidationError: Si la capacité n'est pas un nombre strictement positif
+    """
+    # Vérifier si le champ est rempli (Optional() le laisse passer)
+    if field.data is not None:
+        # Vérifier explicitement que la valeur est strictement positive
+        try:
+            # Convertir en entier pour être sûr
+            value = int(field.data)
+            
+            # Vérifier que la valeur est strictement positive
+            if value <= 0:
+                raise ValidationError(ERROR_MESSAGES['capacity_positive'])
+        except (ValueError, TypeError):
+            # Si la conversion échoue, c'est que la valeur n'est pas un nombre
+            raise ValidationError(ERROR_MESSAGES['capacity_positive'])
+
+def validate_price(form, field):
+    """
+    Valide le prix de l'événement.
+    
+    Args:
+        form: Le formulaire en cours de validation
+        field: Le champ de prix à valider
+    
+    Raises:
+        ValidationError: Si le prix est négatif
+    """
+    # Vérifier si le champ est rempli (Optional() le laisse passer)
+    if field.data is not None:
+        try:
+            # Convertir en float pour être sûr
+            value = float(field.data)
+            
+            # Vérifier que le prix n'est pas négatif
+            if value < 0:
+                raise ValidationError(ERROR_MESSAGES['price_non_negative'])
+        except (ValueError, TypeError):
+            # Si la conversion échoue, c'est que la valeur n'est pas un nombre
+            raise ValidationError(ERROR_MESSAGES['price_non_negative'])
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -38,6 +169,13 @@ class User(UserMixin, db.Model):
         - +33 6 12 34 56 78
         - 0612345678
         - 06 12 34 56 78
+        
+        Args:
+            form: Le formulaire en cours de validation
+            field: Le champ de téléphone à valider
+        
+        Raises:
+            ValidationError: Si le numéro de téléphone ne correspond pas au format attendu
         """
         if self.phone:
             phone_regex = r'^(\+33|0)[1-9](\s?[0-9]{2}){4}$'
@@ -54,12 +192,25 @@ class Event(db.Model):
     capacity = db.Column(db.Integer, nullable=True)
     price = db.Column(db.Float, nullable=True)
     additional_info = db.Column(db.Text, nullable=True)
-    address = db.Column(db.String(300), nullable=True)  # Champ pour l'adresse complète
-    registrations = db.relationship('Registration', backref='event', lazy=True)
+    address = db.Column(db.String(300), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
 
     @property
     def is_past_event(self):
-        return self.date < datetime.now()
+        """
+        Vérifie si l'événement est passé.
+        
+        Returns:
+            bool: True si l'événement est passé, False sinon
+        """
+        return self.date.date() < datetime.now().date()
+
+    def update_active_status(self):
+        """
+        Met à jour le statut actif de l'événement en fonction de sa date.
+        """
+        self.is_active = not self.is_past_event
+        db.session.commit()
 
 class Registration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -71,53 +222,10 @@ class Registration(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-def validate_phone(form, field):
-    """
-    Valide un numéro de téléphone français
-    Formats acceptés : 
-    - +33 6 12 34 56 78
-    - 0612345678
-    - 06 12 34 56 78
-    """
-    phone_regex = r'^(\+33|0)[1-9](\s?[0-9]{2}){4}$'
-    if field.data and not re.match(phone_regex, field.data):
-        raise ValidationError('Numéro de téléphone invalide. Format attendu : 0612345678 ou +33 6 12 34 56 78')
-
-def validate_date(form, field):
-    """
-    Valide que la date est au format JJ/MM/AAAA et dans le futur
-    """
-    if field.data:
-        # Supprimer les espaces avant et après
-        date_str = field.data.strip()
-        
-        # Vérifier le format exact
-        if not re.match(r'^\d{2}/\d{2}/\d{4}$', date_str):
-            raise ValidationError('Format de date invalide. Utilisez JJ/MM/AAAA (exemple : 25/01/2025)')
-        
-        try:
-            # Validation du format JJ/MM/AAAA
-            parsed_date = datetime.strptime(date_str, '%d/%m/%Y').date()
-            
-            # Vérifier que la date n'est pas dans le passé
-            if parsed_date < datetime.now().date():
-                raise ValidationError('La date de l\'événement doit être dans le futur ou aujourd\'hui.')
-        
-        except ValueError:
-            raise ValidationError('Date invalide. Vérifiez que la date existe réellement.')
-
-def validate_time(form, field):
-    """
-    Valide le format de l'heure
-    """
-    if field.data:
-        try:
-            # Convertir la chaîne en heure
-            datetime.strptime(field.data, '%H:%M')
-        except ValueError:
-            raise ValidationError('Format d\'heure invalide. Utilisez HH:MM')
-
 class ProfileForm(FlaskForm):
+    """
+    Formulaire de profil utilisateur avec validation de téléphone optionnelle.
+    """
     first_name = StringField('Prénom')
     last_name = StringField('Nom')
     phone = StringField('Téléphone', validators=[validate_phone])
@@ -125,46 +233,115 @@ class ProfileForm(FlaskForm):
     submit = SubmitField('Mettre à jour')
 
 class CreateEventForm(FlaskForm):
-    title = StringField('Titre', validators=[DataRequired(message='Le titre est obligatoire')])
-    description = TextAreaField('Description', validators=[DataRequired(message='La description est obligatoire')])
+    """
+    Formulaire de création et modification d'événement avec validations complètes.
+    
+    Inclut des validations pour :
+    - Champs obligatoires
+    - Format de date
+    - Plage de valeurs pour capacité et prix
+    """
+    title = StringField('Titre', validators=[
+        DataRequired(message=ERROR_MESSAGES['title_required'])
+    ])
+    description = TextAreaField('Description', validators=[
+        DataRequired(message=ERROR_MESSAGES['description_required'])
+    ])
     
     # Champs de date et heure avec validation
     event_date = StringField('Date', validators=[
-        DataRequired(message='La date est obligatoire'),
+        DataRequired(message=ERROR_MESSAGES['date_required']),
         validate_date
     ])
     event_time = StringField('Heure', validators=[
-        DataRequired(message='L\'heure est obligatoire'),
+        DataRequired(message=ERROR_MESSAGES['time_format']),
         validate_time
     ])
     
     # Champs avec validation moins stricte
-    location = StringField('Lieu', validators=[DataRequired(message='Le lieu est obligatoire')])
+    location = StringField('Lieu', validators=[
+        DataRequired(message=ERROR_MESSAGES['location_required'])
+    ])
     address = StringField('Adresse')
     organizer = StringField('Organisateur')
     
     # Champs numériques optionnels avec validation
     capacity = IntegerField('Capacité', validators=[
         Optional(), 
-        NumberRange(min=1, message='La capacité doit être un nombre positif')
+        validate_capacity
     ])
     price = FloatField('Prix', validators=[
         Optional(), 
-        NumberRange(min=0, message='Le prix doit être un nombre positif ou zéro')
+        validate_price
     ])
     
     additional_info = TextAreaField('Informations supplémentaires')
     submit = SubmitField('Créer l\'événement')
 
+    def validate(self, extra_validators=None):
+        """
+        Surcharge de la méthode de validation pour forcer une validation stricte des champs optionnels
+        """
+        # Validation standard
+        result = super().validate(extra_validators)
+        
+        # Validation supplémentaire pour les champs optionnels
+        if result:
+            # Vérification stricte de la capacité
+            if self.capacity.data is not None:
+                try:
+                    value = int(self.capacity.data)
+                    if value <= 0:
+                        self.capacity.errors.append(ERROR_MESSAGES['capacity_positive'])
+                        result = False
+                except (ValueError, TypeError):
+                    self.capacity.errors.append(ERROR_MESSAGES['capacity_positive'])
+                    result = False
+            
+            # Vérification stricte du prix
+            if self.price.data is not None:
+                try:
+                    value = float(self.price.data)
+                    if value < 0:
+                        self.price.errors.append(ERROR_MESSAGES['price_non_negative'])
+                        result = False
+                except (ValueError, TypeError):
+                    self.price.errors.append(ERROR_MESSAGES['price_non_negative'])
+                    result = False
+        
+        return result
+
 # Utiliser le même formulaire pour la modification
 EventForm = CreateEventForm
 
+def get_events(show_past=False):
+    """
+    Récupère les événements, avec option pour afficher/masquer les événements passés.
+    
+    Args:
+        show_past (bool): Si True, affiche tous les événements actifs. 
+                           Si False, n'affiche que les événements à venir.
+    
+    Returns:
+        list: Liste des événements filtrés
+    """
+    if show_past:
+        # Récupère tous les événements actifs, triés par date décroissante
+        return Event.query.filter(Event.is_active == True).order_by(Event.date.desc()).all()
+    else:
+        # Récupère uniquement les événements futurs et actifs
+        return Event.query.filter(
+            Event.date >= datetime.now(), 
+            Event.is_active == True
+        ).order_by(Event.date).all()
+
 @app.route('/')
 def index():
-    events = Event.query.all()
+    events = Event.query.filter(Event.is_active == True).order_by(Event.date.desc()).all()
     user_registrations = []
     
     if current_user.is_authenticated:
+        # Récupérer les événements où l'utilisateur est inscrit, même archivés
         user_registrations = [reg.event_id for reg in current_user.registrations]
     
     return render_template('index.html', events=events, user_registrations=user_registrations)
@@ -482,6 +659,50 @@ def unregister_event(event_id):
         flash('Vous n\'êtes pas inscrit à cet événement', 'warning')
     
     return redirect(url_for('event_detail', event_id=event_id))
+
+@app.route('/events')
+@login_required
+def list_events():
+    """
+    Route pour lister les événements archivés.
+    Accessible uniquement aux admins et super admins.
+    """
+    # Vérifier les permissions
+    if not (current_user.is_admin or current_user.is_super_admin):
+        flash('Vous n\'avez pas la permission de voir les événements archivés.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Récupérer les événements archivés
+    archived_events = Event.query.filter(Event.is_active == False).order_by(Event.date.desc()).all()
+    
+    return render_template('events.html', 
+                           archived_events=archived_events)
+
+@app.route('/event/<int:event_id>/archive', methods=['POST'])
+@login_required
+def archive_event(event_id):
+    """
+    Route pour archiver/désarchiver un événement (réservée aux admins et super admins).
+    """
+    # Vérifier les permissions
+    if not (current_user.is_admin or current_user.is_super_admin):
+        flash('Vous n\'avez pas la permission de modifier le statut des événements.', 'danger')
+        return redirect(url_for('event_detail', event_id=event_id))
+    
+    # Récupérer l'événement
+    event = Event.query.get_or_404(event_id)
+    
+    # Inverser le statut d'archivage
+    event.is_active = not event.is_active
+    
+    # Ajouter un message personnalisé
+    action = "archivé" if not event.is_active else "désarchivé"
+    flash(f'L\'événement "{event.title}" a été {action}.', 'success')
+    
+    db.session.commit()
+    
+    # Rediriger vers la page appropriée
+    return redirect(url_for('list_events') if not event.is_active else url_for('event_detail', event_id=event_id))
 
 if __name__ == '__main__':
     with app.app_context():

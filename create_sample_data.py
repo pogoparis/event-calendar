@@ -39,7 +39,8 @@ def create_sample_data():
                 organizer='Tech Innovations Inc.',
                 capacity=200,
                 price=150.00,
-                additional_info='Comprend le déjeuner et les pauses café. Dress code: business casual.'
+                additional_info='Comprend le déjeuner et les pauses café. Dress code: business casual.',
+                is_active=True
             ),
             Event(
                 title='Festival de Musique Électronique', 
@@ -50,7 +51,8 @@ def create_sample_data():
                 organizer='Electro Events',
                 capacity=50000,
                 price=80.00,
-                additional_info='Camping disponible sur place. Plusieurs scènes et styles musicaux.'
+                additional_info='Camping disponible sur place. Plusieurs scènes et styles musicaux.',
+                is_active=True
             ),
             Event(
                 title='Salon du Livre Ancien', 
@@ -61,7 +63,8 @@ def create_sample_data():
                 organizer='Association des Bibliophiles',
                 capacity=100,
                 price=10.00,
-                additional_info='Exposition de manuscrits rares. Conférences et dédicaces toute la journée.'
+                additional_info='Exposition de manuscrits rares. Conférences et dédicaces toute la journée.',
+                is_active=False
             ),
             Event(
                 title='Marathon de Paris', 
@@ -72,7 +75,8 @@ def create_sample_data():
                 organizer='Paris Marathon Organization',
                 capacity=40000,
                 price=120.00,
-                additional_info='Parcours de 42,195 km. Médaille et ravitaillement pour tous les participants.'
+                additional_info='Parcours de 42,195 km. Médaille et ravitaillement pour tous les participants.',
+                is_active=False
             )
         ]
         
