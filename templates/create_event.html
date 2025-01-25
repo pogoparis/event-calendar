@@ -1,30 +1,121 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <h2 class="card-title text-center mb-4">Créer un événement</h2>
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Titre</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
+<div class="container mt-4">
+    <h1>Créer un nouvel événement</h1>
+    
+    <form method="POST">
+        {{ form.csrf_token }}
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    {{ form.title.label(class="form-label") }}
+                    {{ form.title(class="form-control") }}
+                    {% if form.title.errors %}
+                        <div class="text-danger">
+                            {% for error in form.title.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-control", rows="4") }}
+                    {% if form.description.errors %}
+                        <div class="text-danger">
+                            {% for error in form.description.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.event_date.label(class="form-label") }}
+                        {{ form.event_date(class="form-control", type="date") }}
+                        {% if form.event_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.event_date.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                    
+                    <div class="col-md-6 mb-3">
+                        {{ form.event_time.label(class="form-label") }}
+                        {{ form.event_time(class="form-control", type="time") }}
+                        {% if form.event_time.errors %}
+                            <div class="text-danger">
+                                {% for error in form.event_time.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
-                    <div class="mb-3">
-                        <label for="date" class="form-label">Date et heure</label>
-                        <input type="datetime-local" class="form-control" id="date" name="date" required>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Créer l'événement</button>
-                    </div>
-                </form>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.location.label(class="form-label") }}
+                    {{ form.location(class="form-control") }}
+                    {% if form.location.errors %}
+                        <div class="text-danger">
+                            {% for error in form.location.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.address.label(class="form-label") }}
+                    {{ form.address(class="form-control") }}
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="mb-3">
+                    {{ form.organizer.label(class="form-label") }}
+                    {{ form.organizer(class="form-control") }}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.capacity.label(class="form-label") }}
+                    {{ form.capacity(class="form-control", type="number", min="1") }}
+                    {% if form.capacity.errors %}
+                        <div class="text-danger">
+                            {% for error in form.capacity.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.price.label(class="form-label") }}
+                    {{ form.price(class="form-control", type="number", step="0.01", min="0") }}
+                    {% if form.price.errors %}
+                        <div class="text-danger">
+                            {% for error in form.price.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.additional_info.label(class="form-label") }}
+                    {{ form.additional_info(class="form-control", rows="4") }}
+                </div>
             </div>
         </div>
-    </div>
+        
+        {{ form.submit(class="btn btn-primary") }}
+        <a href="{{ url_for('admin') }}" class="btn btn-secondary ms-2">Annuler</a>
+    </form>
 </div>
 {% endblock %}
