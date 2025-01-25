@@ -10,8 +10,8 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
-                    {{ form.title.label(class="form-label") }}
-                    {{ form.title(class="form-control") }}
+                    <label for="{{ form.title.id }}" class="form-label">{{ form.title.label.text }}</label>
+                    {{ form.title(class="form-control", id=form.title.id) }}
                     {% if form.title.errors %}
                         <div class="text-danger">
                             {% for error in form.title.errors %}
@@ -22,8 +22,8 @@
                 </div>
                 
                 <div class="mb-3">
-                    {{ form.description.label(class="form-label") }}
-                    {{ form.description(class="form-control", rows="4") }}
+                    <label for="{{ form.description.id }}" class="form-label">{{ form.description.label.text }}</label>
+                    {{ form.description(class="form-control", rows="4", id=form.description.id) }}
                     {% if form.description.errors %}
                         <div class="text-danger">
                             {% for error in form.description.errors %}
@@ -35,10 +35,8 @@
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        {{ form.event_date.label(class="form-label") }}
-                        {{ form.event_date(class="form-control", 
-                                           id="datepicker", 
-                                           placeholder="JJ/MM/AAAA") }}
+                        <label for="{{ form.event_date.id }}" class="form-label">{{ form.event_date.label.text }}</label>
+                        {{ form.event_date(class="form-control", id=form.event_date.id, placeholder="JJ/MM/AAAA (exemple : 28/01/2025)", type="text") }}
                         {% if form.event_date.errors %}
                             <div class="text-danger">
                                 {% for error in form.event_date.errors %}
@@ -49,8 +47,8 @@
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                        {{ form.event_time.label(class="form-label") }}
-                        {{ form.event_time(class="form-control", type="time") }}
+                        <label for="{{ form.event_time.id }}" class="form-label">{{ form.event_time.label.text }}</label>
+                        {{ form.event_time(class="form-control", type="time", id=form.event_time.id) }}
                         {% if form.event_time.errors %}
                             <div class="text-danger">
                                 {% for error in form.event_time.errors %}
@@ -62,8 +60,8 @@
                 </div>
                 
                 <div class="mb-3">
-                    {{ form.location.label(class="form-label") }}
-                    {{ form.location(class="form-control") }}
+                    <label for="{{ form.location.id }}" class="form-label">{{ form.location.label.text }}</label>
+                    {{ form.location(class="form-control", id=form.location.id) }}
                     {% if form.location.errors %}
                         <div class="text-danger">
                             {% for error in form.location.errors %}
@@ -74,20 +72,20 @@
                 </div>
                 
                 <div class="mb-3">
-                    {{ form.address.label(class="form-label") }}
-                    {{ form.address(class="form-control") }}
+                    <label for="{{ form.address.id }}" class="form-label">{{ form.address.label.text }}</label>
+                    {{ form.address(class="form-control", id=form.address.id) }}
                 </div>
             </div>
             
             <div class="col-md-6">
                 <div class="mb-3">
-                    {{ form.organizer.label(class="form-label") }}
-                    {{ form.organizer(class="form-control") }}
+                    <label for="{{ form.organizer.id }}" class="form-label">{{ form.organizer.label.text }}</label>
+                    {{ form.organizer(class="form-control", id=form.organizer.id) }}
                 </div>
                 
                 <div class="mb-3">
-                    {{ form.capacity.label(class="form-label") }}
-                    {{ form.capacity(class="form-control", type="number", min="1") }}
+                    <label for="{{ form.capacity.id }}" class="form-label">{{ form.capacity.label.text }}</label>
+                    {{ form.capacity(class="form-control", type="number", min="1", id=form.capacity.id) }}
                     {% if form.capacity.errors %}
                         <div class="text-danger">
                             {% for error in form.capacity.errors %}
@@ -98,8 +96,8 @@
                 </div>
                 
                 <div class="mb-3">
-                    {{ form.price.label(class="form-label") }}
-                    {{ form.price(class="form-control", type="number", step="0.01", min="0") }}
+                    <label for="{{ form.price.id }}" class="form-label">{{ form.price.label.text }}</label>
+                    {{ form.price(class="form-control", type="number", step="0.01", id=form.price.id) }}
                     {% if form.price.errors %}
                         <div class="text-danger">
                             {% for error in form.price.errors %}
@@ -109,24 +107,26 @@
                     {% endif %}
                 </div>
                 
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        {{ form.additional_info.label(class="form-label") }}
-                        {{ form.additional_info(class="form-control", rows="4") }}
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form.image_url.label(class="form-label") }}
-                        {{ form.image_url(class="form-control", placeholder="https://exemple.com/image.jpg") }}
-                        <small class="form-text text-muted">Entrez une URL complète vers une image en ligne</small>
-                    </div>
+                <div class="mb-3">
+                    <label for="{{ form.additional_info.id }}" class="form-label">{{ form.additional_info.label.text }}</label>
+                    {{ form.additional_info(class="form-control", rows="4", id=form.additional_info.id) }}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.image_url.id }}" class="form-label">{{ form.image_url.label.text }}</label>
+                    {{ form.image_url(class="form-control", id=form.image_url.id, placeholder="Exemples :\n- Conférence : /static/images/events/conference.jpg\n- Concert : /static/images/events/concert.jpg\n- Art : /static/images/events/art.jpg\n- Sport : /static/images/events/sport.jpg\n- Gastronomie : /static/images/events/food.jpg") }}
+                    <small class="form-text text-muted">Collez un lien direct vers une image en ligne</small>
                 </div>
             </div>
         </div>
         
-        <div class="d-grid">
-            {{ form.submit(class="btn btn-primary") }}
-            <a href="{{ url_for('admin') }}" class="btn btn-secondary ms-2">Annuler</a>
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-start">
+                    {{ form.submit(class="btn btn-primary me-2", style="width: auto;") }}
+                    <a href="{{ url_for('admin') }}" class="btn btn-secondary" style="width: auto;">Annuler</a>
+                </div>
+            </div>
         </div>
     </form>
 </div>
@@ -140,5 +140,31 @@
         locale: "fr",         // Langue française
         minDate: "today"      // Interdire les dates passées
     });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('{{ form.event_date.id }}');
+    
+    dateInput.addEventListener('input', function(e) {
+        // Supprime tout ce qui n'est pas un chiffre
+        let value = e.target.value.replace(/[^\d]/g, '');
+        
+        // Limite à 8 caractères
+        if (value.length > 8) {
+            value = value.slice(0, 8);
+        }
+        
+        // Formate automatiquement
+        if (value.length >= 2) {
+            value = value.slice(0, 2) + '/' + value.slice(2);
+        }
+        if (value.length >= 5) {
+            value = value.slice(0, 5) + '/' + value.slice(5);
+        }
+        
+        e.target.value = value;
+    });
+});
 </script>
 {% endblock %}
