@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">Événements à venir</h1>
+
+<div class="row">
+    {% for event in events %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ event.title }}</h5>
+                <p class="card-text">{{ event.description[:100] }}...</p>
+                <p class="card-text"><small class="text-muted">Date: {{ event.date.strftime('%d/%m/%Y %H:%M') }}</small></p>
+                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-primary">Plus d'infos</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

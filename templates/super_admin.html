@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Super Admin - Gestion des Administrateurs</h1>
+
+    <!-- Create Admin Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Créer un Nouvel Administrateur
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('super_admin') }}">
+                <input type="hidden" name="action" value="create_admin">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Nom d'utilisateur</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Créer Administrateur</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin List -->
+    <div class="card">
+        <div class="card-header">
+            Liste des Administrateurs
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nom d'utilisateur</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                    {% if admin.username != 'pogoparis' %}
+                    <tr>
+                        <td>{{ admin.username }}</td>
+                        <td>{{ admin.email }}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modifyAdminModal{{ admin.id }}">
+                                Modifier
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAdminModal{{ admin.id }}">
+                                Supprimer
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Modify Admin Modal -->
+                    <div class="modal fade" id="modifyAdminModal{{ admin.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Modifier Administrateur</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('super_admin') }}">
+                                    <input type="hidden" name="action" value="modify_admin">
+                                    <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Nom d'utilisateur</label>
+                                            <input type="text" class="form-control" name="username" value="{{ admin.username }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" name="email" value="{{ admin.email }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Nouveau mot de passe (optionnel)</label>
+                                            <input type="password" class="form-control" name="password">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Admin Modal -->
+                    <div class="modal fade" id="deleteAdminModal{{ admin.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Supprimer Administrateur</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('super_admin') }}">
+                                    <input type="hidden" name="action" value="delete_admin">
+                                    <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                                    <div class="modal-body">
+                                        Êtes-vous sûr de vouloir supprimer l'administrateur {{ admin.username }} ?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-danger">Supprimer</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

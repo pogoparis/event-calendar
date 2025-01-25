@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Modifier l'Événement</h1>
+    
+    <form method="POST" action="{{ url_for('edit_event', event_id=event.id) }}">
+        <div class="mb-3">
+            <label for="title" class="form-label">Titre de l'événement</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ event.title }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="4" required>{{ event.description }}</textarea>
+        </div>
+        
+        <div class="mb-3">
+            <label for="date" class="form-label">Date et Heure</label>
+            <input type="datetime-local" class="form-control" id="date" name="date" 
+                   value="{{ event.date.strftime('%Y-%m-%dT%H:%M') }}" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+        <a href="{{ url_for('admin') }}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}
