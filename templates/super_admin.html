@@ -2,18 +2,24 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="mb-4">Super Admin - Gestion des Administrateurs</h1>
+    <h1 class="mb-4">Super Admin - Gestion des Utilisateurs</h1>
 
     <div class="row">
-        <div class="col-md-6">
-            <!-- Create Admin Form -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    Créer un Nouvel Administrateur
+        <div class="col-md-6 offset-md-3">
+            <!-- Create User/Admin Form -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Créer un Nouvel Utilisateur ou Administrateur
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('super_admin') }}">
-                        <input type="hidden" name="action" value="create_admin">
+                        <div class="mb-3">
+                            <label for="user_type" class="form-label">Type d'utilisateur</label>
+                            <select class="form-select" id="user_type" name="action" required>
+                                <option value="create_user">Utilisateur standard</option>
+                                <option value="create_admin">Administrateur</option>
+                            </select>
+                        </div>
                         <div class="mb-3">
                             <label for="username" class="form-label">Nom d'utilisateur</label>
                             <input type="text" class="form-control" id="username" name="username" required>
@@ -26,34 +32,7 @@
                             <label for="password" class="form-label">Mot de passe</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Créer Administrateur</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <!-- Create User Form -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    Créer un Nouvel Utilisateur
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('super_admin') }}">
-                        <input type="hidden" name="action" value="create_user">
-                        <div class="mb-3">
-                            <label for="user_username" class="form-label">Nom d'utilisateur</label>
-                            <input type="text" class="form-control" id="user_username" name="username" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="user_email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="user_email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="user_password" class="form-label">Mot de passe</label>
-                            <input type="password" class="form-control" id="user_password" name="password" required>
-                        </div>
-                        <button type="submit" class="btn btn-success">Créer Utilisateur</button>
+                        <button type="submit" class="btn btn-primary w-100">Créer</button>
                     </form>
                 </div>
             </div>
@@ -61,8 +40,8 @@
     </div>
 
     <!-- Admin List -->
-    <div class="card">
-        <div class="card-header">
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
             Liste des Administrateurs
         </div>
         <div class="card-body">
@@ -71,7 +50,7 @@
                     <tr>
                         <th>Nom d'utilisateur</th>
                         <th>Email</th>
-                        <th>Actions</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,8 +59,8 @@
                     <tr>
                         <td>{{ admin.username }}</td>
                         <td>{{ admin.email }}</td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modifyAdminModal{{ admin.id }}">
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#modifyAdminModal{{ admin.id }}">
                                 Modifier
                             </button>
                             <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAdminModal{{ admin.id }}">
@@ -103,16 +82,16 @@
                                     <input type="hidden" name="admin_id" value="{{ admin.id }}">
                                     <div class="modal-body">
                                         <div class="mb-3">
-                                            <label class="form-label">Nom d'utilisateur</label>
-                                            <input type="text" class="form-control" name="username" value="{{ admin.username }}" required>
+                                            <label for="modify_username{{ admin.id }}" class="form-label">Nom d'utilisateur</label>
+                                            <input type="text" class="form-control" id="modify_username{{ admin.id }}" name="username" value="{{ admin.username }}" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" class="form-control" name="email" value="{{ admin.email }}" required>
+                                            <label for="modify_email{{ admin.id }}" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="modify_email{{ admin.id }}" name="email" value="{{ admin.email }}" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Nouveau mot de passe (optionnel)</label>
-                                            <input type="password" class="form-control" name="password">
+                                            <label for="modify_password{{ admin.id }}" class="form-label">Nouveau mot de passe (optionnel)</label>
+                                            <input type="password" class="form-control" id="modify_password{{ admin.id }}" name="password">
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -147,6 +126,97 @@
                         </div>
                     </div>
                     {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- User List -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            Liste des Utilisateurs
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nom d'utilisateur</th>
+                        <th>Email</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#modifyUserModal{{ user.id }}">
+                                Modifier
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                                Supprimer
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Modify User Modal -->
+                    <div class="modal fade" id="modifyUserModal{{ user.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Modifier Utilisateur</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('super_admin') }}">
+                                    <input type="hidden" name="action" value="modify_user">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="modify_username{{ user.id }}" class="form-label">Nom d'utilisateur</label>
+                                            <input type="text" class="form-control" id="modify_username{{ user.id }}" name="username" value="{{ user.username }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="modify_email{{ user.id }}" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="modify_email{{ user.id }}" name="email" value="{{ user.email }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="modify_password{{ user.id }}" class="form-label">Nouveau mot de passe (optionnel)</label>
+                                            <input type="password" class="form-control" id="modify_password{{ user.id }}" name="password">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete User Modal -->
+                    <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Supprimer Utilisateur</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('super_admin') }}">
+                                    <input type="hidden" name="action" value="delete_user">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <div class="modal-body">
+                                        Êtes-vous sûr de vouloir supprimer l'utilisateur {{ user.username }} ?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-danger">Supprimer</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
                 </tbody>
             </table>

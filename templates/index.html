@@ -16,6 +16,13 @@
                         {% if current_user.is_authenticated and event.id in user_registrations %}
                             <span class="badge bg-{% if event.is_past_event %}secondary{% else %}success{% endif %} position-absolute top-0 end-0 m-2">Inscrit</span>
                         {% endif %}
+                        
+                        {% if event.image_url %}
+                            <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                        
                         <div class="card-body flex-grow-1">
                             <h5 class="card-title">{{ event.title }}</h5>
                             <p class="card-text">{{ event.description }}</p>
@@ -40,10 +47,25 @@
                                                 <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
                                             </form>
                                         {% else %}
-                                            <a href="{{ url_for('register_event', event_id=event.id) }}" class="btn btn-primary btn-sm">S'inscrire</a>
+                                            {% set remaining_spots = event.get_remaining_spots() %}
+                                            {% if remaining_spots is none or remaining_spots > 0 %}
+                                                <a href="{{ url_for('register_event', event_id=event.id) }}" class="btn btn-primary btn-sm">
+                                                    S'inscrire 
+                                                    {% if remaining_spots is not none %}
+                                                        ({{ remaining_spots }} place(s))
+                                                    {% endif %}
+                                                </a>
+                                            {% else %}
+                                                <span class="btn btn-sm btn-danger disabled">Complet</span>
+                                            {% endif %}
                                         {% endif %}
                                     {% else %}
-                                        <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm">Connectez-vous pour vous inscrire</a>
+                                        {% set remaining_spots = event.get_remaining_spots() %}
+                                        {% if remaining_spots is none or remaining_spots > 0 %}
+                                            <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm">Connectez-vous pour vous inscrire</a>
+                                        {% else %}
+                                            <span class="btn btn-sm btn-danger disabled">Complet</span>
+                                        {% endif %}
                                     {% endif %}
                                 {% else %}
                                     <span class="btn btn-sm btn-secondary disabled">Événement terminé</span>

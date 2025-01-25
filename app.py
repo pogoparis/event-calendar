@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateTimeField, FloatField, IntegerField
-from wtforms.validators import DataRequired, Email, Length, ValidationError, Regexp, Optional
+from wtforms.validators import DataRequired, Email, Length, ValidationError, Regexp, Optional, URL
 import re
 from wtforms.validators import NumberRange
 
@@ -151,6 +151,21 @@ def validate_price(form, field):
             # Si la conversion échoue, c'est que la valeur n'est pas un nombre
             raise ValidationError(ERROR_MESSAGES['price_non_negative'])
 
+def validate_image_url(form, field):
+    """
+    Valide l'URL de l'image si elle est fournie.
+    
+    Args:
+        form: Le formulaire en cours de validation
+        field: Le champ d'URL de l'image à valider
+    
+    Raises:
+        ValidationError: Si l'URL n'est pas valide
+    """
+    if field.data:
+        url_validator = URL(message="L'URL de l'image n'est pas valide. Veuillez entrer une URL complète.")
+        url_validator(form, field)
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -194,6 +209,8 @@ class Event(db.Model):
     additional_info = db.Column(db.Text, nullable=True)
     address = db.Column(db.String(300), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
+    registrations = db.relationship('Registration', backref='event', lazy='dynamic')
+    image_url = db.Column(db.String(500), nullable=True)  # Nouveau champ pour l'URL de l'image
 
     @property
     def is_past_event(self):
@@ -211,6 +228,32 @@ class Event(db.Model):
         """
         self.is_active = not self.is_past_event
         db.session.commit()
+
+    def is_registration_possible(self):
+        """
+        Vérifie si l'inscription est possible en fonction de la capacité.
+        
+        Returns:
+            bool: True si l'inscription est possible, False sinon
+        """
+        if self.capacity is None:
+            return True
+        
+        current_registrations = self.registrations.count()
+        return current_registrations < self.capacity
+
+    def get_remaining_spots(self):
+        """
+        Calcule le nombre de places restantes.
+        
+        Returns:
+            int: Nombre de places restantes, ou None si pas de limite
+        """
+        if self.capacity is None:
+            return None
+        
+        current_registrations = self.registrations.count()
+        return max(0, self.capacity - current_registrations)
 
 class Registration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -276,6 +319,7 @@ class CreateEventForm(FlaskForm):
     ])
     
     additional_info = TextAreaField('Informations supplémentaires')
+    image_url = StringField('URL de l\'image', validators=[Optional(), validate_image_url])  # Nouveau champ pour l'URL de l'image
     submit = SubmitField('Créer l\'événement')
 
     def validate(self, extra_validators=None):
@@ -353,7 +397,7 @@ def login():
         if user and check_password_hash(user.password_hash, request.form.get('password')):
             login_user(user)
             return redirect(url_for('index'))
-        flash('Invalid username or password')
+        flash('Invalid username or password', 'danger')
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -364,11 +408,11 @@ def register():
         password = request.form.get('password')
         
         if User.query.filter_by(username=username).first():
-            flash('Username already exists')
+            flash('Username already exists', 'danger')
             return redirect(url_for('register'))
             
         if User.query.filter_by(email=email).first():
-            flash('Email already registered')
+            flash('Email already registered', 'danger')
             return redirect(url_for('register'))
             
         user = User(
@@ -400,15 +444,24 @@ def event_detail(event_id):
                            event=event, 
                            user_registrations=user_registrations)
 
-@app.route('/event/register/<int:event_id>')
+@app.route('/event/register/<int:event_id>', methods=['POST'])
 @login_required
 def register_event(event_id):
+    """
+    Inscription d'un utilisateur à un événement avec gestion de la capacité.
+    
+    Args:
+        event_id (int): Identifiant de l'événement
+    
+    Returns:
+        Redirection vers la page de détail de l'événement
+    """
     event = Event.query.get_or_404(event_id)
     
-    # Vérifier si l'événement est passé
-    if event.is_past_event:
-        flash('Impossible de s\'inscrire à un événement passé', 'danger')
-        return redirect(url_for('index'))
+    # Vérifier si l'événement est actif
+    if not event.is_active:
+        flash('Cet événement n\'est plus disponible.', 'danger')
+        return redirect(url_for('event_detail', event_id=event_id))
     
     # Vérifier si l'utilisateur est déjà inscrit
     existing_registration = Registration.query.filter_by(
@@ -417,7 +470,12 @@ def register_event(event_id):
     ).first()
     
     if existing_registration:
-        flash('Vous êtes déjà inscrit à cet événement', 'warning')
+        flash('Vous êtes déjà inscrit à cet événement', 'danger')
+        return redirect(url_for('event_detail', event_id=event_id))
+    
+    # Vérifier la capacité de l'événement
+    if not event.is_registration_possible():
+        flash('Désolé, cet événement est complet.', 'danger')
         return redirect(url_for('event_detail', event_id=event_id))
     
     # Créer une nouvelle inscription
@@ -426,11 +484,28 @@ def register_event(event_id):
         event_id=event_id
     )
     
-    db.session.add(new_registration)
-    db.session.commit()
+    try:
+        db.session.add(new_registration)
+        db.session.commit()
+        
+        # Récupérer le nombre de places restantes
+        remaining_spots = event.get_remaining_spots()
+        
+        # Message personnalisé selon les places restantes
+        if remaining_spots is not None:
+            if remaining_spots > 0:
+                flash(f'Inscription réussie ! Il reste {remaining_spots} place(s) disponible(s).', 'success')
+            else:
+                flash('Inscription réussie ! L\'événement est maintenant complet.', 'success')
+        else:
+            flash('Inscription réussie !', 'success')
+        
+        return redirect(url_for('event_detail', event_id=event_id))
     
-    flash('Inscription réussie', 'success')
-    return redirect(url_for('event_detail', event_id=event_id))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur lors de l\'inscription : {str(e)}', 'danger')
+        return redirect(url_for('event_detail', event_id=event_id))
 
 @app.route('/admin')
 @login_required
@@ -469,7 +544,8 @@ def create_event():
                 organizer=form.organizer.data,
                 capacity=form.capacity.data,
                 price=form.price.data,
-                additional_info=form.additional_info.data
+                additional_info=form.additional_info.data,
+                image_url=form.image_url.data  # Nouveau champ pour l'URL de l'image
             )
             
             # Ajouter et enregistrer l'événement
@@ -520,15 +596,15 @@ def edit_event(event_id):
 @app.route('/super_admin', methods=['GET', 'POST'])
 @login_required
 def super_admin():
-    # Only allow access to super admin
+    # Only allow access to super admin (currently only 'pogoparis')
     if not current_user.is_admin or current_user.username != 'pogoparis':
-        flash('Vous n\'avez pas les autorisations requises.', 'error')
+        flash('Vous n\'avez pas les autorisations requises.', 'danger')
         return redirect(url_for('index'))
     
     if request.method == 'POST':
         action = request.form.get('action')
         
-        if action == 'create_admin':
+        if action in ['create_admin', 'create_user']:
             username = request.form.get('username')
             email = request.form.get('email')
             password = request.form.get('password')
@@ -536,21 +612,21 @@ def super_admin():
             # Check if user already exists
             existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
             if existing_user:
-                flash('Un utilisateur avec ce nom ou email existe déjà.', 'error')
+                flash('Un utilisateur avec ce nom ou email existe déjà.', 'danger')
             else:
-                new_admin = User(
+                new_user = User(
                     username=username, 
                     email=email, 
                     password_hash=generate_password_hash(password),
-                    is_admin=True
+                    is_admin=action == 'create_admin'
                 )
-                db.session.add(new_admin)
+                db.session.add(new_user)
                 try:
                     db.session.commit()
-                    flash('Nouvel administrateur créé avec succès.', 'success')
+                    flash(f'Nouvel {"administrateur" if action == "create_admin" else "utilisateur"} créé avec succès.', 'success')
                 except Exception as e:
                     db.session.rollback()
-                    flash(f'Erreur lors de la création de l\'administrateur: {str(e)}', 'error')
+                    flash(f'Erreur lors de la création : {str(e)}', 'danger')
         
         elif action == 'modify_admin':
             admin_id = request.form.get('admin_id')
@@ -565,7 +641,7 @@ def super_admin():
                 ).first()
                 
                 if existing_user:
-                    flash('Un utilisateur avec ce nom ou email existe déjà.', 'error')
+                    flash('Un utilisateur avec ce nom ou email existe déjà.', 'danger')
                 else:
                     admin.username = request.form.get('username')
                     admin.email = request.form.get('email')
@@ -579,9 +655,9 @@ def super_admin():
                         flash('Administrateur modifié avec succès.', 'success')
                     except Exception as e:
                         db.session.rollback()
-                        flash(f'Erreur lors de la modification de l\'administrateur: {str(e)}', 'error')
+                        flash(f'Erreur lors de la modification de l\'administrateur: {str(e)}', 'danger')
             else:
-                flash('Impossible de modifier cet administrateur.', 'error')
+                flash('Impossible de modifier cet administrateur.', 'danger')
         
         elif action == 'delete_admin':
             admin_id = request.form.get('admin_id')
@@ -598,38 +674,67 @@ def super_admin():
                     flash('Administrateur supprimé avec succès.', 'success')
                 except Exception as e:
                     db.session.rollback()
-                    flash(f'Erreur lors de la suppression de l\'administrateur: {str(e)}', 'error')
+                    flash(f'Erreur lors de la suppression de l\'administrateur: {str(e)}', 'danger')
             else:
-                flash('Impossible de supprimer cet administrateur.', 'error')
+                flash('Impossible de supprimer cet administrateur.', 'danger')
         
-        elif action == 'create_user':
-            username = request.form.get('username')
-            email = request.form.get('email')
-            password = request.form.get('password')
+        elif action == 'modify_user':
+            user_id = request.form.get('user_id')
+            user = User.query.get(user_id)
             
-            # Check if user already exists
-            existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
-            if existing_user:
-                flash('Un utilisateur avec ce nom ou email existe déjà.', 'error')
+            if user:
+                # Check if new username or email already exists
+                existing_user = User.query.filter(
+                    (User.username == request.form.get('username') or 
+                     User.email == request.form.get('email')) and 
+                    User.id != user_id
+                ).first()
+                
+                if existing_user:
+                    flash('Un utilisateur avec ce nom ou email existe déjà.', 'danger')
+                else:
+                    user.username = request.form.get('username')
+                    user.email = request.form.get('email')
+                    
+                    # Update password only if provided
+                    if request.form.get('password'):
+                        user.password_hash = generate_password_hash(request.form.get('password'))
+                    
+                    try:
+                        db.session.commit()
+                        flash('Utilisateur modifié avec succès.', 'success')
+                    except Exception as e:
+                        db.session.rollback()
+                        flash(f'Erreur lors de la modification de l\'utilisateur: {str(e)}', 'danger')
             else:
-                new_user = User(
-                    username=username, 
-                    email=email, 
-                    password_hash=generate_password_hash(password),
-                    is_admin=False,
-                    is_super_admin=False
-                )
-                db.session.add(new_user)
+                flash('Impossible de modifier cet utilisateur.', 'danger')
+        
+        elif action == 'delete_user':
+            user_id = request.form.get('user_id')
+            user = User.query.get(user_id)
+            
+            if user:
                 try:
+                    # First, delete all registrations associated with this user
+                    Registration.query.filter_by(user_id=user.id).delete()
+                    
+                    # Then delete the user
+                    db.session.delete(user)
                     db.session.commit()
-                    flash('Nouvel utilisateur créé avec succès.', 'success')
+                    flash('Utilisateur supprimé avec succès.', 'success')
                 except Exception as e:
                     db.session.rollback()
-                    flash(f'Erreur lors de la création de l\'utilisateur: {str(e)}', 'error')
+                    flash(f'Erreur lors de la suppression de l\'utilisateur: {str(e)}', 'danger')
+            else:
+                flash('Impossible de supprimer cet utilisateur.', 'danger')
     
     # Get all admin users
     admins = User.query.filter_by(is_admin=True).all()
-    return render_template('super_admin.html', admins=admins)
+    
+    # Get all standard users
+    users = User.query.filter_by(is_admin=False).all()
+    
+    return render_template('super_admin.html', admins=admins, users=users)
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -681,7 +786,7 @@ def unregister_event(event_id):
         db.session.commit()
         flash('Vous avez été désinscrit de l\'événement', 'success')
     else:
-        flash('Vous n\'êtes pas inscrit à cet événement', 'warning')
+        flash('Vous n\'êtes pas inscrit à cet événement', 'danger')
     
     return redirect(url_for('event_detail', event_id=event_id))
 
@@ -693,7 +798,7 @@ def list_events():
     Accessible uniquement aux admins et super admins.
     """
     # Vérifier les permissions
-    if not (current_user.is_admin or current_user.is_super_admin):
+    if not (current_user.is_admin):
         flash('Vous n\'avez pas la permission de voir les événements archivés.', 'danger')
         return redirect(url_for('index'))
     
@@ -710,7 +815,7 @@ def archive_event(event_id):
     Route pour archiver/désarchiver un événement (réservée aux admins et super admins).
     """
     # Vérifier les permissions
-    if not (current_user.is_admin or current_user.is_super_admin):
+    if not (current_user.is_admin):
         flash('Vous n\'avez pas la permission de modifier le statut des événements.', 'danger')
         return redirect(url_for('event_detail', event_id=event_id))
     

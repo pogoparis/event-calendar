@@ -109,9 +109,17 @@
                     {% endif %}
                 </div>
                 
-                <div class="mb-3">
-                    {{ form.additional_info.label(class="form-label") }}
-                    {{ form.additional_info(class="form-control", rows="4") }}
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form.additional_info.label(class="form-label") }}
+                        {{ form.additional_info(class="form-control", rows="4") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.image_url.label(class="form-label") }}
+                        {{ form.image_url(class="form-control", placeholder="https://exemple.com/image.jpg") }}
+                        <small class="form-text text-muted">Entrez une URL complète vers une image en ligne</small>
+                    </div>
                 </div>
             </div>
         </div>
