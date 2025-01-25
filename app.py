@@ -317,6 +317,15 @@ class Event(db.Model):
         current_registrations = self.registrations.count()
         return current_registrations < self.capacity
 
+    def get_registration_count(self):
+        """
+        Retourne le nombre d'inscriptions pour cet événement.
+        
+        Returns:
+            int: Nombre d'inscriptions
+        """
+        return self.registrations.count()
+
     def get_remaining_spots(self):
         """
         Calcule le nombre de places restantes.
@@ -508,15 +517,25 @@ def get_events(show_past=False):
     Returns:
         list: Liste des événements filtrés
     """
-    if show_past:
-        # Récupère tous les événements actifs, triés par date décroissante
-        return Event.query.filter(Event.is_active == True).order_by(Event.date.desc()).all()
-    else:
-        # Récupère uniquement les événements futurs et actifs
-        return Event.query.filter(
-            Event.date >= datetime.now(), 
-            Event.is_active == True
-        ).order_by(Event.date).all()
+    # Filtrer les événements actifs et non archivés
+    query = Event.query.filter(
+        Event.is_active == True
+    )
+    
+    # Filtrer les événements futurs si show_past est False
+    if not show_past:
+        query = query.filter(Event.date >= datetime.now())
+    
+    # Trier par date
+    query = query.order_by(Event.date.asc())
+    
+    # Log de débogage
+    events = query.all()
+    app.logger.info(f"Événements récupérés - Total: {len(events)}")
+    for event in events:
+        app.logger.info(f"Événement - ID: {event.id}, Titre: {event.title}, Actif: {event.is_active}, Date: {event.date}")
+    
+    return events
 
 @app.route('/')
 def index():
@@ -526,8 +545,11 @@ def index():
     Returns:
         Rendu du template index avec les événements
     """
-    # Récupérer tous les événements
-    events = Event.query.order_by(Event.date).all()
+    # Récupérer les événements à venir
+    events = get_events()
+    
+    # Log de débogage supplémentaire
+    app.logger.info(f"Route index - Nombre d'événements à afficher: {len(events)}")
     
     # Initialiser les variables
     user_registrations = []
@@ -960,23 +982,29 @@ def unregister_event(event_id):
         flash('Erreur lors de la désinscription', 'danger')
         return redirect(url_for('index'))
 
-@app.route('/events')
+@app.route('/events/archived', methods=['GET'])
 @login_required
 def list_events():
     """
     Route pour lister les événements archivés.
     Accessible uniquement aux admins et super admins.
     """
-    # Vérifier les permissions
-    if not (current_user.is_admin):
+    if not (current_user.is_admin or current_user.username == 'pogoparis'):
         flash('Vous n\'avez pas la permission de voir les événements archivés.', 'danger')
         return redirect(url_for('index'))
     
-    # Récupérer les événements archivés
+    # Récupérer les événements archivés avec logs de débogage
     archived_events = Event.query.filter(Event.is_active == False).order_by(Event.date.desc()).all()
     
+    # Log de débogage
+    app.logger.info(f"Nombre d'événements archivés trouvés : {len(archived_events)}")
+    for event in archived_events:
+        app.logger.info(f"Événement archivé - ID: {event.id}, Titre: {event.title}, Date: {event.date}, Actif: {event.is_active}")
+    
     return render_template('events.html', 
-                           archived_events=archived_events)
+                           events=archived_events,
+                           title='Événements archivés',
+                           is_archived_view=True)
 
 @app.route('/event/archive/<int:event_id>', methods=['POST'])
 @login_required
@@ -990,31 +1018,34 @@ def archive_event(event_id):
     Returns:
         Redirection vers la page de liste des événements
     """
-    form = ArchiveEventForm()
-    
-    if not (current_user.is_admin or current_user.is_superadmin):
+    # Vérification des permissions
+    if not (current_user.is_admin or current_user.username == 'pogoparis'):
         flash('Vous n\'avez pas les droits pour archiver un événement', 'danger')
         return redirect(url_for('index'))
     
-    if form.validate_on_submit():
-        event = Event.query.get_or_404(event_id)
-        
-        try:
-            # Inverser le statut actif de l'événement
-            event.is_active = not event.is_active
-            db.session.commit()
-            
-            status = 'archivé' if not event.is_active else 'réactivé'
-            flash(f'L\'événement a été {status} avec succès.', 'success')
-            return redirect(url_for('list_events'))
-        
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Erreur lors de l\'archivage : {str(e)}', 'danger')
-            return redirect(url_for('list_events'))
+    # Récupérer l'événement
+    event = Event.query.get_or_404(event_id)
     
-    flash('Erreur de validation du formulaire', 'danger')
-    return redirect(url_for('list_events'))
+    # Log de débogage avant modification
+    app.logger.info(f"Tentative d'archivage - ID: {event.id}, Titre: {event.title}, Statut actuel: {event.is_active}")
+    
+    try:
+        # Inverser le statut actif de l'événement
+        event.is_active = not event.is_active
+        db.session.commit()
+        
+        # Log de débogage après modification
+        app.logger.info(f"Événement archivé - ID: {event.id}, Titre: {event.title}, Nouveau statut: {event.is_active}")
+        
+        status = 'archivé' if not event.is_active else 'réactivé'
+        flash(f'L\'événement a été {status} avec succès.', 'success')
+        return redirect(url_for('list_events'))
+    
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Erreur lors de l'archivage : {str(e)}")
+        flash(f'Erreur lors de l\'archivage : {str(e)}', 'danger')
+        return redirect(url_for('index'))
 
 if __name__ == '__main__':
     with app.app_context():

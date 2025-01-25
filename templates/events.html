@@ -2,37 +2,61 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Événements archivés</h1>
-
-    {% if archived_events %}
-        <div class="list-group">
-            {% for event in archived_events %}
-            <div class="list-group-item list-group-item-action text-muted d-flex justify-content-between align-items-center">
-                <div>
-                    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="text-muted">
-                        {{ event.title }} 
-                        <small class="text-muted">({{ event.date.strftime('%d/%m/%Y') }})</small>
-                    </a>
-                    <span class="badge bg-secondary ms-2">{{ event.registrations|length }} inscrits</span>
-                </div>
-                <div class="d-flex align-items-center">
-                    <div class="text-muted me-3">
-                        <strong>Lieu :</strong> {{ event.location }}
+    <h1 class="mb-4">{{ title or 'Événements archivés' }}</h1>
+    
+    {% if events %}
+        <div class="row">
+            {% for event in events %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 {% if not event.is_active %}border-warning{% endif %}">
+                        {% if event.image_url %}
+                            <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                        
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {{ event.title }}
+                                {% if not event.is_active %}
+                                    <span class="badge bg-warning ms-2">Archivé</span>
+                                {% endif %}
+                            </h5>
+                            <p class="card-text">{{ event.description|truncate(150) }}</p>
+                            <p>
+                                <strong>Date:</strong> {{ event.date.strftime('%d/%m/%Y %H:%M') }}<br>
+                                <strong>Lieu:</strong> {{ event.location }}<br>
+                                <strong>Adresse:</strong> {{ event.address }}<br>
+                                <strong>Organisateur:</strong> {{ event.organizer }}
+                                {% if event.price is not none %}
+                                    <br><strong>Prix:</strong> {{ event.price }}€
+                                {% endif %}
+                                <br><strong>Inscrits:</strong> {{ event.get_registration_count() }}
+                            </p>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-secondary btn-sm">Détails</a>
+                                
+                                {% if current_user.is_admin or current_user.username == 'pogoparis' %}
+                                    <form method="POST" action="{{ url_for('archive_event', event_id=event.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm {% if event.is_active %}btn-warning{% else %}btn-success{% endif %}" 
+                                                onclick="return confirm('Voulez-vous vraiment {{ 'désarchiver' if not event.is_active else 'archiver' }} cet événement ?')">
+                                            {% if event.is_active %}Archiver{% else %}Désarchiver{% endif %}
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    {% if current_user.is_admin or current_user.is_superadmin %}
-                        <form method="POST" action="{{ url_for('archive_event', event_id=event.id) }}" class="d-inline">
-                            {{ form.csrf_token }}
-                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Voulez-vous vraiment désarchiver cet événement ?')">
-                                <i class="fas fa-undo"></i> Désarchiver
-                            </button>
-                        </form>
-                    {% endif %}
                 </div>
-            </div>
             {% endfor %}
         </div>
     {% else %}
-        <p class="alert alert-info">Aucun événement archivé.</p>
+        <div class="alert alert-info" role="alert">
+            Aucun événement archivé.
+        </div>
     {% endif %}
 </div>
 {% endblock %}
