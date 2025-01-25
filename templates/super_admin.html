@@ -4,28 +4,59 @@
 <div class="container mt-5">
     <h1 class="mb-4">Super Admin - Gestion des Administrateurs</h1>
 
-    <!-- Create Admin Form -->
-    <div class="card mb-4">
-        <div class="card-header">
-            Créer un Nouvel Administrateur
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Create Admin Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    Créer un Nouvel Administrateur
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('super_admin') }}">
+                        <input type="hidden" name="action" value="create_admin">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Créer Administrateur</button>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('super_admin') }}">
-                <input type="hidden" name="action" value="create_admin">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Nom d'utilisateur</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
+        
+        <div class="col-md-6">
+            <!-- Create User Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    Créer un Nouvel Utilisateur
                 </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('super_admin') }}">
+                        <input type="hidden" name="action" value="create_user">
+                        <div class="mb-3">
+                            <label for="user_username" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="user_username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="user_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="user_email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="user_password" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="user_password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Créer Utilisateur</button>
+                    </form>
                 </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Mot de passe</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Créer Administrateur</button>
-            </form>
+            </div>
         </div>
     </div>
 

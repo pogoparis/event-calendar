@@ -601,6 +601,31 @@ def super_admin():
                     flash(f'Erreur lors de la suppression de l\'administrateur: {str(e)}', 'error')
             else:
                 flash('Impossible de supprimer cet administrateur.', 'error')
+        
+        elif action == 'create_user':
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            
+            # Check if user already exists
+            existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+            if existing_user:
+                flash('Un utilisateur avec ce nom ou email existe déjà.', 'error')
+            else:
+                new_user = User(
+                    username=username, 
+                    email=email, 
+                    password_hash=generate_password_hash(password),
+                    is_admin=False,
+                    is_super_admin=False
+                )
+                db.session.add(new_user)
+                try:
+                    db.session.commit()
+                    flash('Nouvel utilisateur créé avec succès.', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'Erreur lors de la création de l\'utilisateur: {str(e)}', 'error')
     
     # Get all admin users
     admins = User.query.filter_by(is_admin=True).all()
