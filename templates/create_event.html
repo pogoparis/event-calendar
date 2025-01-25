@@ -114,8 +114,19 @@
                 
                 <div class="mb-3">
                     <label for="{{ form.image_url.id }}" class="form-label">{{ form.image_url.label.text }}</label>
-                    {{ form.image_url(class="form-control", id=form.image_url.id, placeholder="Exemples :\n- Conférence : /static/images/events/tech-conference.jpg\n- Salon de vin : /static/images/events/wine-salon.jpg\n- Festival : /static/images/events/electro-festival.jpg") }}
-                    <small class="form-text text-muted">Collez un lien direct vers une image en ligne</small>
+                    {{ form.image_url(class="form-control", id=form.image_url.id, 
+                                       placeholder="Exemples :\n- /static/images/events/tech-conference.jpg\n- /static/images/events/wine-salon.jpg\n- /static/images/events/electro-festival.jpg\n- https://exemple.com/image.jpg", 
+                                       pattern="^(/static/.*\.(jpg|jpeg|png|gif|webp)|https?://.*\.(jpg|jpeg|png|gif|webp))$") }}
+                    <small class="form-text text-muted">
+                        Utilisez un chemin local (/static/...) ou une URL complète se terminant par .jpg, .jpeg, .png, .gif ou .webp
+                    </small>
+                    {% if form.image_url.errors %}
+                        <div class="text-danger">
+                            {% for error in form.image_url.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

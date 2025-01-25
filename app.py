@@ -106,8 +106,16 @@ def validate_price(form, field):
 
 def validate_image_url(form, field):
     if field.data:
-        url_validator = URL(message="L'URL de l'image n'est pas valide. Veuillez entrer une URL complète.")
-        url_validator(form, field)
+        # Liste des extensions d'images autorisées
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+        
+        # Vérifier si l'URL se termine par une extension d'image
+        if not any(field.data.lower().endswith(ext) for ext in allowed_extensions):
+            raise ValidationError('Veuillez fournir une URL valide se terminant par .jpg, .jpeg, .png, .gif ou .webp')
+        
+        # Vérifier si l'URL commence par http:// ou https://
+        if not field.data.startswith(('http://', 'https://', '/static/')):
+            raise ValidationError('L\'URL doit commencer par http://, https:// ou /static/')
 
 def validate_email(form, field):
     email = field.data

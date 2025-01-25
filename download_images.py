@@ -17,6 +17,10 @@ images = [
     {
         'source': 'static/images/events/art.jpg',
         'destination': 'static/images/events/electro-festival.jpg'
+    },
+    {
+        'source': 'static/images/default-event.jpg',
+        'destination': 'static/images/events/default-event.jpg'
     }
 ]
 
