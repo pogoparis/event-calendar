@@ -1,7 +1,9 @@
-Flask==3.0.0
-Flask-SQLAlchemy==3.1.1
-Flask-Login==0.6.3
-Flask-WTF==1.2.1
-Werkzeug==3.0.1
-email-validator==2.1.0.post1
+flask==2.3.2
+flask-sqlalchemy==3.0.3
+flask-login==0.6.2
+flask-migrate==4.0.4
+flask-wtf==1.1.1
 python-dotenv==1.0.0
+werkzeug==2.3.4
+wtforms==3.0.1
+flask-script==2.0.6

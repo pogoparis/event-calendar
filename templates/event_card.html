@@ -28,23 +28,15 @@
             <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-secondary btn-sm">En savoir plus</a>
             
             {% if event.is_active %}
-                {% if current_user.is_authenticated %}
-                    {% if event.id in user_registrations %}
-                        <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
+                {% if current_user.is_authenticated and not event.is_past %}
+                    {% if event.id in user_registered_events %}
+                        <form action="{{ url_for('unregister_event', event_id=event.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-warning btn-sm">Se désinscrire</button>
                         </form>
                     {% else %}
-                        {% set remaining_spots = event.get_remaining_spots() %}
-                        {% if remaining_spots is none or remaining_spots > 0 %}
-                            <a href="{{ url_for('register_event', event_id=event.id) }}" class="btn btn-primary btn-sm">
-                                S'inscrire 
-                                {% if remaining_spots is not none %}
-                                    ({{ remaining_spots }} place(s))
-                                {% endif %}
-                            </a>
-                        {% else %}
-                            <span class="btn btn-sm btn-danger disabled">Complet</span>
-                        {% endif %}
+                        <form action="{{ url_for('register_event', event_id=event.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-primary btn-sm">S'inscrire</button>
+                        </form>
                     {% endif %}
                 {% else %}
                     {% set remaining_spots = event.get_remaining_spots() %}
@@ -56,7 +48,7 @@
                 {% endif %}
             {% else %}
                 <span class="btn btn-sm btn-secondary disabled">
-                    {% if event.date < datetime.now() %}
+                    {% if event.date <= datetime.now() %}
                         Événement terminé
                     {% else %}
                         Événement archivé

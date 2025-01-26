@@ -16,6 +16,9 @@ class Config:
     # Configuration de sécurité
     SESSION_COOKIE_SECURE = True
     REMEMBER_COOKIE_SECURE = True
+    
+    # Activer le mode débogage par défaut
+    DEBUG = True
 
 class DevelopmentConfig(Config):
     DEBUG = True
