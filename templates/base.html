@@ -72,12 +72,14 @@
     <div class="container mt-3">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
+                <div class="container mt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show position-relative" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close position-absolute top-50 end-0 translate-middle-y" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
     </div>
@@ -86,19 +88,30 @@
         {% block content %}{% endblock %}
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    {% block google_maps_script %}{% endblock %}
-    
-    {% block scripts %}{% endblock %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Fadeout des messages flash après 5 secondes
-            $('.alert').delay(5000).fadeOut(1500, function() {
-                $(this).remove();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialisation des tooltips Bootstrap
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
             });
         });
     </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+    .alert-persistent {
+        transition: opacity 0.5s ease-in-out;
+        opacity: 1;
+    }
+    .alert-persistent.fade {
+        opacity: 0;
+    }
+    </style>
+
+    {% block google_maps_script %}{% endblock %}
+    
+    {% block scripts %}{% endblock %}
 </body>
 </html>

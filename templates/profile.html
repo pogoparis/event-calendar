@@ -1,54 +1,66 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Profil de {{ user.username }}</h1>
+<div class="container mt-4 position-relative">
+    <div class="row mb-3 align-items-center">
+        <div class="col-2">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
     
     <div class="row">
         <div class="col-md-6">
-            <h2>Informations personnelles</h2>
-            <form method="POST">
-                {{ form.hidden_tag() }}
-                {{ form.csrf_token }}
-                
-                <div class="mb-3">
-                    <label for="username" class="form-label">{{ form.username.label }}</label>
-                    {{ form.username(class="form-control", value=user.username) }}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">Profil de {{ user.username }}</h2>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="first_name" class="form-label">{{ form.first_name.label }}</label>
-                    {{ form.first_name(class="form-control", value=user.first_name or '') }}
-                </div>
-                
-                <div class="mb-3">
-                    <label for="last_name" class="form-label">{{ form.last_name.label }}</label>
-                    {{ form.last_name(class="form-control", value=user.last_name or '') }}
-                </div>
-                
-                <div class="mb-3">
-                    <label for="phone" class="form-label">{{ form.phone.label }}</label>
-                    {{ form.phone(class="form-control", value=user.phone or '') }}
-                    {% if form.phone.errors %}
-                        <div class="text-danger">
-                            {% for error in form.phone.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">{{ form.username.label }}</label>
+                            {{ form.username(class="form-control", value=user.username) }}
                         </div>
-                    {% endif %}
-                    <small class="form-text text-muted">Format : 0612345678 ou +33 6 12 34 56 78</small>
+                        
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">{{ form.first_name.label }}</label>
+                            {{ form.first_name(class="form-control", value=user.first_name or '') }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">{{ form.last_name.label }}</label>
+                            {{ form.last_name(class="form-control", value=user.last_name or '') }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">{{ form.phone.label }}</label>
+                            {{ form.phone(class="form-control", value=user.phone or '') }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.phone.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Format : 0612345678 ou +33 6 12 34 56 78</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">{{ form.new_password.label }}</label>
+                            {{ form.new_password(class="form-control") }}
+                            <small class="form-text text-muted">Laissez vide si vous ne souhaitez pas modifier votre mot de passe</small>
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="new_password" class="form-label">{{ form.new_password.label }}</label>
-                    {{ form.new_password(class="form-control") }}
-                    <small class="form-text text-muted">Laissez vide si vous ne souhaitez pas modifier votre mot de passe</small>
-                </div>
-                
-                <div class="d-grid">
-                    {{ form.submit(class="btn btn-primary") }}
-                </div>
-            </form>
+            </div>
         </div>
         
         <div class="col-md-6">

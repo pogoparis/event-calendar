@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 position-relative">
+    <div class="row mb-3 align-items-center">
+        <div class="col-2">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+    
     <h1>{% if edit_mode %}Modifier l'événement{% else %}Créer un nouvel événement{% endif %}</h1>
     
     <form method="POST" enctype="multipart/form-data">
