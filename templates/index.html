@@ -2,88 +2,52 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
+    <h1 class="mb-4">Événements PogoParis</h1>
+    
+    {% if upcoming_events %}
+    <div class="row mb-4">
         <div class="col-12">
-            <h1 class="mb-4">Événements</h1>
-
-            {% if events %}
-                <div class="row">
-                    {% for event in events %}
-                        {% if not event.is_past_event %}
-                            <div class="col-md-4 mb-4">
-                                <div class="card h-100 d-flex flex-column {% if event.is_past_event %}past-event{% endif %}">
-                                    {% if current_user.is_authenticated and event.id in user_registrations %}
-                                        <span class="badge bg-{% if event.is_past_event %}secondary{% else %}success{% endif %} position-absolute top-0 end-0 m-2">Inscrit</span>
-                                    {% endif %}
-                                    
-                                    {% if event.image_url %}
-                                        <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
-                                    {% else %}
-                                        <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
-                                    {% endif %}
-                                    
-                                    <div class="card-body flex-grow-1">
-                                        <h5 class="card-title">{{ event.title }}</h5>
-                                        <p class="card-text">{{ event.description|truncate(150) }}</p>
-                                        <p>
-                                            <strong>Date:</strong> {{ event.date.strftime('%d/%m/%Y %H:%M') }}<br>
-                                            <strong>Lieu:</strong> {{ event.location }}<br>
-                                            <strong>Adresse:</strong> {{ event.address }}<br>
-                                            <strong>Organisateur:</strong> {{ event.organizer }}
-                                            {% if event.price is not none %}
-                                                <br><strong>Prix:</strong> {{ event.price }}€
-                                            {% endif %}
-                                            <br><strong>Inscrits:</strong> {{ event.get_registration_count() }}
-                                        </p>
-                                    </div>
-                                    <div class="card-footer bg-transparent border-0 pt-0">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-secondary btn-sm">En savoir plus</a>
-                                            
-                                            {% if not event.is_past_event %}
-                                                {% if current_user.is_authenticated %}
-                                                    {% if event.id in user_registrations %}
-                                                        <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}" class="d-inline">
-                                                            <button type="submit" class="btn btn-sm btn-danger">Se désinscrire</button>
-                                                        </form>
-                                                    {% else %}
-                                                        {% set remaining_spots = event.get_remaining_spots() %}
-                                                        {% if remaining_spots is none or remaining_spots > 0 %}
-                                                            <a href="{{ url_for('register_event', event_id=event.id) }}" class="btn btn-primary btn-sm">
-                                                                S'inscrire 
-                                                                {% if remaining_spots is not none %}
-                                                                    ({{ remaining_spots }} place(s))
-                                                                {% endif %}
-                                                            </a>
-                                                        {% else %}
-                                                            <span class="btn btn-sm btn-danger disabled">Complet</span>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                {% else %}
-                                                    {% set remaining_spots = event.get_remaining_spots() %}
-                                                    {% if remaining_spots is none or remaining_spots > 0 %}
-                                                        <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm">Connectez-vous pour vous inscrire</a>
-                                                    {% else %}
-                                                        <span class="btn btn-sm btn-danger disabled">Complet</span>
-                                                    {% endif %}
-                                                {% endif %}
-                                            {% else %}
-                                                <span class="btn btn-sm btn-secondary disabled">Événement terminé</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="alert alert-info text-center" role="alert">
-                    Aucun événement à venir pour le moment.
-                </div>
-            {% endif %}
+            <h2 class="border-bottom pb-2">Événements à venir</h2>
         </div>
+        {% for event in upcoming_events %}
+            <div class="col-md-4 mb-4">
+                {% include 'event_card.html' with context %}
+            </div>
+        {% endfor %}
     </div>
+    {% endif %}
+    
+    {% if archived_events %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="border-bottom pb-2">Événements archivés</h2>
+        </div>
+        {% for event in archived_events %}
+            <div class="col-md-4 mb-4">
+                {% include 'event_card.html' with context %}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if past_events %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="border-bottom pb-2">Événements passés</h2>
+        </div>
+        {% for event in past_events %}
+            <div class="col-md-4 mb-4">
+                {% include 'event_card.html' with context %}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if not (upcoming_events or archived_events or past_events) %}
+    <div class="alert alert-info text-center">
+        Aucun événement n'est actuellement disponible.
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 

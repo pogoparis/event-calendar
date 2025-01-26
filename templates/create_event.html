@@ -2,9 +2,9 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>Créer un nouvel événement</h1>
+    <h1>{% if edit_mode %}Modifier l'événement{% else %}Créer un nouvel événement{% endif %}</h1>
     
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         {{ form.csrf_token }}
         
         <div class="row">
@@ -75,6 +75,28 @@
                     <label for="{{ form.address.id }}" class="form-label">{{ form.address.label.text }}</label>
                     {{ form.address(class="form-control", id=form.address.id) }}
                 </div>
+                
+                {% if form.image_file %}
+                <div class="mb-3">
+                    <label for="{{ form.image_file.id }}" class="form-label">{{ form.image_file.label.text }}</label>
+                    {{ form.image_file(class="form-control", id=form.image_file.id) }}
+                    
+                    {% if event and event.image_url %}
+                    <div class="mt-2">
+                        <p>Image actuelle :</p>
+                        <img src="{{ event.image_url }}" alt="Image de l'événement" class="img-thumbnail" style="max-width: 200px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);">
+                    </div>
+                    {% endif %}
+                    
+                    {% if form.image_file.errors %}
+                        <div class="text-danger">
+                            {% for error in form.image_file.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
             
             <div class="col-md-6">
@@ -111,31 +133,13 @@
                     <label for="{{ form.additional_info.id }}" class="form-label">{{ form.additional_info.label.text }}</label>
                     {{ form.additional_info(class="form-control", rows="4", id=form.additional_info.id) }}
                 </div>
-                
-                <div class="mb-3">
-                    <label for="{{ form.image_url.id }}" class="form-label">{{ form.image_url.label.text }}</label>
-                    {{ form.image_url(class="form-control", id=form.image_url.id, 
-                                       placeholder="Exemples :\n- /static/images/events/tech-conference.jpg\n- /static/images/events/wine-salon.jpg\n- /static/images/events/electro-festival.jpg\n- https://exemple.com/image.jpg", 
-                                       pattern="^(/static/.*\.(jpg|jpeg|png|gif|webp)|https?://.*\.(jpg|jpeg|png|gif|webp))$") }}
-                    <small class="form-text text-muted">
-                        Utilisez un chemin local (/static/...) ou une URL complète se terminant par .jpg, .jpeg, .png, .gif ou .webp
-                    </small>
-                    {% if form.image_url.errors %}
-                        <div class="text-danger">
-                            {% for error in form.image_url.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
             </div>
         </div>
         
         <div class="row mt-3">
             <div class="col-md-12">
                 <div class="d-flex justify-content-start">
-                    {{ form.submit(class="btn btn-primary me-2", style="width: auto;") }}
-                    <a href="{{ url_for('admin') }}" class="btn btn-secondary" style="width: auto;">Annuler</a>
+                    {{ form.submit(class="btn btn-primary", value="Modifier l'événement" if edit_mode else "Créer l'événement") }}
                 </div>
             </div>
         </div>
@@ -175,6 +179,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         e.target.value = value;
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageFileInput = document.getElementById('{{ form.image_file.id }}');
+    const imagePreview = document.getElementById('image-preview');
+    
+    imageFileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (!imagePreview) {
+                    const previewContainer = document.createElement('div');
+                    previewContainer.innerHTML = `
+                        <div class="mt-2">
+                            <p>Aperçu de l'image :</p>
+                            <img id="image-preview" src="" alt="Aperçu de l'image" class="img-thumbnail" style="max-width: 200px;">
+                        </div>
+                    `;
+                    imageFileInput.parentNode.appendChild(previewContainer);
+                }
+                document.getElementById('image-preview').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
     });
 });
 </script>

@@ -4,7 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, IntegerField, FloatField, SelectField, SubmitField, HiddenField, DateTimeField
+from wtforms import StringField, PasswordField, TextAreaField, IntegerField, FloatField, SelectField, SubmitField, HiddenField, DateTimeField, FileField
 from wtforms.validators import DataRequired, Optional, ValidationError, Email, Length, Regexp, URL, NumberRange
 from datetime import datetime, timedelta
 import logging
@@ -12,6 +12,8 @@ import re
 import os
 from dotenv import load_dotenv
 from config import Config
+from werkzeug.utils import secure_filename
+import uuid
 
 load_dotenv()
 
@@ -168,8 +170,7 @@ class Event(db.Model):
     address = db.Column(db.String(300), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     registrations = db.relationship('Registration', backref='event', lazy='dynamic')
-    image_url = db.Column(db.String(500), nullable=True)  
-
+    
     @property
     def is_past_event(self):
         return self.date.date() < datetime.now().date()
@@ -242,7 +243,7 @@ class CreateEventForm(FlaskForm):
     ])
     
     additional_info = TextAreaField('Informations supplémentaires')
-    image_url = StringField('URL de l\'image', validators=[Optional(), validate_image_url])  
+    image_file = FileField('Image de l\'événement', validators=[Optional()])
     submit = SubmitField('Créer l\'événement')
 
     def validate(self, extra_validators=None):
@@ -348,9 +349,21 @@ def get_events(show_past=False):
 
 @app.route('/')
 def index():
-    events = get_events()
+    # Récupérer tous les événements, triés par date
+    events = Event.query.order_by(Event.date.desc()).all()
     
-    app.logger.info(f"Route index - Nombre d'événements à afficher: {len(events)}")
+    # Séparer les événements en différentes catégories
+    upcoming_events = []
+    past_events = []
+    archived_events = []
+    
+    for event in events:
+        if not event.is_active and event.date < datetime.now():
+            past_events.append(event)
+        elif not event.is_active:
+            archived_events.append(event)
+        else:
+            upcoming_events.append(event)
     
     user_registrations = []
     form = None
@@ -361,7 +374,9 @@ def index():
         form = UnregisterEventForm()
     
     return render_template('index.html', 
-                           events=events, 
+                           upcoming_events=upcoming_events, 
+                           past_events=past_events, 
+                           archived_events=archived_events,
                            user_registrations=user_registrations,
                            form=form)
 
@@ -565,59 +580,101 @@ def create_event():
     
     if form.validate_on_submit():
         try:
-            event_datetime = datetime.strptime(f"{form.event_date.data} {form.event_time.data}", '%d/%m/%Y %H:%M')
-            
+            # Créer un nouvel événement
             new_event = Event(
                 title=form.title.data,
                 description=form.description.data,
-                date=event_datetime,
+                date=datetime.strptime(f'{form.event_date.data} {form.event_time.data}', '%d/%m/%Y %H:%M'),
                 location=form.location.data,
-                address=form.address.data,
                 organizer=form.organizer.data,
                 capacity=form.capacity.data,
                 price=form.price.data,
                 additional_info=form.additional_info.data,
-                image_url=form.image_url.data  
+                address=form.address.data
             )
+            
+            # Gérer le téléchargement de l'image
+            if form.image_file.data:
+                # Générer un nom de fichier unique
+                filename = str(uuid.uuid4()) + '_' + secure_filename(form.image_file.data.filename)
+                file_path = os.path.join('static/uploads/events', filename)
+                
+                # Créer le dossier s'il n'existe pas
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                
+                # Sauvegarder l'image
+                form.image_file.data.save(file_path)
+                
+                # Enregistrer le chemin de l'image
+                new_event.image_url = f'/static/uploads/events/{filename}'
+            else:
+                # Image par défaut si aucune image n'est téléchargée
+                new_event.image_url = '/static/images/default-event.jpg'
             
             db.session.add(new_event)
             db.session.commit()
             
-            flash('Événement créé avec succès', 'success')
+            flash('Événement créé avec succès.', 'success')
             return redirect(url_for('event_detail', event_id=new_event.id))
         
         except Exception as e:
             db.session.rollback()
             flash(f'Erreur lors de la création de l\'événement : {str(e)}', 'danger')
     
-    return render_template('create_event.html', form=form)
+    return render_template('create_event.html', form=form, edit_mode=False)
 
 @app.route('/admin/edit_event/<int:event_id>', methods=['GET', 'POST'])
 @login_required
 def edit_event(event_id):
-    if not current_user.is_admin:
-        flash('Vous n\'avez pas les droits pour modifier cet événement', 'danger')
-        return redirect(url_for('index'))
-    
     event = Event.query.get_or_404(event_id)
     
-    form = EventForm(obj=event)
+    # Ensure only admin can edit events
+    if not current_user.is_admin:
+        flash('Vous n\'avez pas les droits pour modifier cet événement.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Préparer le formulaire avec les données existantes de l'événement
+    form = CreateEventForm(obj=event)
+    
+    # Pré-remplir les champs de date et d'heure
+    if request.method == 'GET':
+        form.event_date.data = event.date.strftime('%d/%m/%Y') if event.date else None
+        form.event_time.data = event.date.strftime('%H:%M') if event.date else None
     
     if form.validate_on_submit():
         try:
+            # Gérer le téléchargement de l'image
+            if form.image_file.data:
+                # Générer un nom de fichier unique
+                filename = str(uuid.uuid4()) + '_' + secure_filename(form.image_file.data.filename)
+                file_path = os.path.join('static/uploads/events', filename)
+                
+                # Créer le dossier s'il n'existe pas
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                
+                # Sauvegarder l'image
+                form.image_file.data.save(file_path)
+                
+                # Enregistrer le chemin de l'image
+                event.image_url = f'/static/uploads/events/{filename}'
+            
+            # Copier les données du formulaire vers l'événement
             form.populate_obj(event)
             
-            if form.event_date.data and form.event_time.data:
-                event.date = datetime.strptime(f"{form.event_date.data} {form.event_time.data}", '%d/%m/%Y %H:%M')
+            # Convertir la date et l'heure
+            date_str = form.event_date.data
+            time_str = form.event_time.data
+            event.date = datetime.strptime(f'{date_str} {time_str}', '%d/%m/%Y %H:%M')
             
             db.session.commit()
-            flash('Événement modifié avec succès', 'success')
-            return redirect(url_for('event_detail', event_id=event_id))
+            flash('Événement mis à jour avec succès.', 'success')
+            return redirect(url_for('event_detail', event_id=event.id))
+        
         except Exception as e:
             db.session.rollback()
             flash(f'Erreur lors de la modification : {str(e)}', 'danger')
     
-    return render_template('edit_event.html', form=form, event=event)
+    return render_template('create_event.html', form=form, event=event, edit_mode=True)
 
 @app.route('/super_admin', methods=['GET', 'POST'])
 @login_required
@@ -747,47 +804,57 @@ def archive_event(event_id):
     flash(f'L\'événement a été {status} avec succès.', 'success')
     return redirect(url_for('list_events'))
 
-def create_super_admin(username='pogoparis', email='admin@example.com', password='AdminPassword123!'):
-    """
-    Crée un super administrateur rapidement pour le développement et le test.
+def seed_database():
+    # Create a super admin if not exists
+    admin_username = 'pogoparis'
+    admin_email = 'admin@example.com'
+    admin_password = 'AdminPassword123!'
     
-    :param username: Nom d'utilisateur du super admin
-    :param email: Email du super admin
-    :param password: Mot de passe du super admin
-    :return: L'utilisateur créé ou existant
-    """
-    existing_user = User.query.filter_by(username=username).first()
-    if existing_user:
-        print(f"Utilisateur {username} existe déjà.")
-        return existing_user
+    existing_admin = User.query.filter_by(username=admin_username).first()
+    if not existing_admin:
+        admin = User(
+            username=admin_username,
+            email=admin_email,
+            password_hash=generate_password_hash(admin_password),
+            is_admin=True
+        )
+        db.session.add(admin)
     
-    new_user = User(
-        username=username,
-        email=email,
-        password_hash=generate_password_hash(password),
-        is_admin=True
-    )
+    # Create some sample events
+    sample_events = [
+        {
+            'title': 'Soirée Networking Tech',
+            'description': 'Rencontrez les professionnels de la tech et développez votre réseau !',
+            'date': datetime.now() + timedelta(days=30),
+            'location': 'Station F, Paris',
+            'organizer': 'PogoParis',
+            'capacity': 100,
+            'price': 0,
+            'address': '55 Boulevard Vincent Auriol, 75013 Paris',
+        },
+        {
+            'title': 'Atelier Intelligence Artificielle',
+            'description': 'Découvrez les dernières avancées en IA et machine learning.',
+            'date': datetime.now() + timedelta(days=45),
+            'location': 'NUMA, Paris',
+            'organizer': 'Tech Innovators',
+            'capacity': 50,
+            'price': 25,
+            'address': '39 Rue du Caire, 75002 Paris',
+        }
+    ]
     
-    try:
-        db.session.add(new_user)
-        db.session.commit()
-        print(f"Super administrateur {username} créé avec succès !")
-        return new_user
-    except Exception as e:
-        db.session.rollback()
-        print(f"Erreur lors de la création du super administrateur : {e}")
-        return None
-
-@app.cli.command("create-super-admin")
-def cli_create_super_admin():
-    """
-    Commande CLI pour créer un super administrateur.
-    Peut être appelée avec : flask create-super-admin
-    """
-    with app.app_context():
-        create_super_admin()
+    for event_data in sample_events:
+        existing_event = Event.query.filter_by(title=event_data['title']).first()
+        if not existing_event:
+            new_event = Event(**event_data)
+            db.session.add(new_event)
+    
+    db.session.commit()
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        db.drop_all()  # Drop all existing tables
+        db.create_all()  # Recreate all tables
+        seed_database()  # Add seed data
     app.run(debug=True)
