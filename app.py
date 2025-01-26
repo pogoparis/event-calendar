@@ -1,3 +1,4 @@
+# Importations des bibliothèques et modules nécessaires
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
@@ -8,18 +9,39 @@ from datetime import datetime, timedelta
 import click
 from werkzeug.utils import secure_filename
 
+# Importations des modules spécifiques à l'application
 from config import Config
 from extensions import db, migrate, login_manager
 from models import User, Event, Registration
 from forms import (LoginForm, RegisterForm, CreateEventForm, ProfileForm, 
                    UnregisterEventForm, ArchiveEventForm, SuperAdminForm, DeleteUserForm, ModifyUserForm)
+from error_handlers import (
+    register_error_handlers, 
+    log_error, 
+    CustomValidationError, 
+    DatabaseOperationError
+)
 
 def create_app():
+    """
+    Fonction de création et configuration de l'application Flask.
+    
+    Cette fonction initialise tous les composants nécessaires de l'application,
+    configure les extensions, définit les routes et les gestionnaires.
+    
+    :return: Instance de l'application Flask configurée
+    """
+    # Création de l'instance Flask
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Logging setup
+    # Configuration du logging
     def setup_logging(app):
+        """
+        Configure le système de logging pour l'application.
+        
+        :param app: Instance de l'application Flask
+        """
         handler = logging.StreamHandler()
         handler.setLevel(logging.INFO)
         app.logger.addHandler(handler)
@@ -27,28 +49,62 @@ def create_app():
 
     setup_logging(app)
 
-    # Initialize extensions
+    # Initialisation des extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'login'
 
+    # Enregistrement des gestionnaires d'erreurs
+    register_error_handlers(app)
+
     @login_manager.unauthorized_handler
     def unauthorized():
+        """
+        Gestionnaire pour les accès non autorisés.
+        
+        Redirige l'utilisateur vers la page de connexion avec un message.
+        """
+        log_error('warning', 'Tentative d\'accès non autorisée')
         flash('Veuillez vous connecter pour accéder à cette page.', 'info')
         return redirect(url_for('login'))
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        """
+        Charge un utilisateur à partir de son ID de session.
+        
+        :param user_id: ID de l'utilisateur
+        :return: Objet utilisateur ou None
+        """
+        try:
+            return User.query.get(int(user_id))
+        except Exception as e:
+            log_error('error', f'Erreur lors du chargement de l\'utilisateur {user_id}', str(e))
+            return None
 
     def get_events(show_past=False):
-        if show_past:
-            return Event.query.order_by(Event.date.desc()).all()
-        return Event.query.filter(Event.date >= datetime.now()).order_by(Event.date).all()
+        """
+        Récupère la liste des événements.
+        
+        :param show_past: Si True, inclut les événements passés
+        :return: Liste des événements
+        """
+        try:
+            if show_past:
+                return Event.query.order_by(Event.date.desc()).all()
+            return Event.query.filter(Event.date >= datetime.now()).order_by(Event.date).all()
+        except Exception as e:
+            log_error('error', 'Erreur lors de la récupération des événements', str(e))
+            return []
 
     @app.route('/')
     def index():
+        """
+        Route principale de l'application.
+        
+        Affiche la liste des événements à venir et passés.
+        """
         # Filtrer les événements par type
         all_events = get_events(show_past=True)
         
@@ -89,6 +145,11 @@ def create_app():
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
+        """
+        Route de connexion.
+        
+        Gère l'authentification des utilisateurs.
+        """
         form = LoginForm()
         if form.validate_on_submit():
             user = User.query.filter_by(username=form.username.data).first()
@@ -101,6 +162,11 @@ def create_app():
 
     @app.route('/register', methods=['GET', 'POST'])
     def register():
+        """
+        Route d'inscription.
+        
+        Permet aux nouveaux utilisateurs de créer un compte.
+        """
         form = RegisterForm()
         if form.validate_on_submit():
             existing_user = User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first()
@@ -121,12 +187,24 @@ def create_app():
     @app.route('/logout')
     @login_required
     def logout():
+        """
+        Route de déconnexion.
+        
+        Déconnecte l'utilisateur actuel.
+        """
         logout_user()
         flash('Vous avez été déconnecté.', 'info')
         return redirect(url_for('index'))
 
     @app.route('/event/<int:event_id>')
     def event_detail(event_id):
+        """
+        Route de détail d'événement.
+        
+        Affiche les informations détaillées d'un événement spécifique.
+        
+        :param event_id: ID de l'événement
+        """
         event = Event.query.get_or_404(event_id)
         
         user_registrations = []
@@ -150,38 +228,42 @@ def create_app():
     @app.route('/event/register/<int:event_id>', methods=['GET', 'POST'])
     @login_required
     def register_event(event_id):
-        app.logger.info(f"Tentative d'inscription à l'événement {event_id}")
-        app.logger.info(f"Méthode de requête : {request.method}")
-        app.logger.info(f"Utilisateur connecté : {current_user.username}")
+        """
+        Route d'inscription à un événement.
         
-        event = Event.query.get_or_404(event_id)
+        Permet à un utilisateur connecté de s'inscrire à un événement.
         
-        if not event.is_active:
-            app.logger.warning(f"Événement {event_id} n'est plus actif")
-            flash('Cet événement n\'est plus disponible.', 'danger')
-            return redirect(request.referrer or url_for('index'))
-        
-        existing_registration = Registration.query.filter_by(
-            user_id=current_user.id, 
-            event_id=event_id
-        ).first()
-        
-        if existing_registration:
-            app.logger.warning(f"Utilisateur déjà inscrit à l'événement {event_id}")
-            flash('Vous êtes déjà inscrit à cet événement', 'danger')
-            return redirect(request.referrer or url_for('index'))
-        
-        if not event.is_registration_possible():
-            app.logger.warning(f"Événement {event_id} complet")
-            flash('Désolé, cet événement est complet.', 'danger')
-            return redirect(request.referrer or url_for('index'))
-        
-        new_registration = Registration(
-            user_id=current_user.id, 
-            event_id=event_id
-        )
-        
+        :param event_id: ID de l'événement
+        """
         try:
+            app.logger.info(f"Tentative d'inscription à l'événement {event_id}")
+            app.logger.info(f"Méthode de requête : {request.method}")
+            app.logger.info(f"Utilisateur connecté : {current_user.username}")
+            
+            event = Event.query.get_or_404(event_id)
+            
+            if not event.is_active:
+                log_error('warning', f"Événement {event_id} n'est plus actif")
+                raise CustomValidationError('Cet événement n\'est plus disponible.')
+            
+            existing_registration = Registration.query.filter_by(
+                user_id=current_user.id, 
+                event_id=event_id
+            ).first()
+            
+            if existing_registration:
+                log_error('warning', f"Utilisateur déjà inscrit à l'événement {event_id}")
+                raise CustomValidationError('Vous êtes déjà inscrit à cet événement')
+            
+            if not event.is_registration_possible():
+                log_error('warning', f"Événement {event_id} complet")
+                raise CustomValidationError('Désolé, cet événement est complet.')
+            
+            new_registration = Registration(
+                user_id=current_user.id, 
+                event_id=event_id
+            )
+            
             db.session.add(new_registration)
             db.session.commit()
             
@@ -200,15 +282,27 @@ def create_app():
             
             return redirect(request.referrer or url_for('index'))
         
-        except Exception as e:
-            app.logger.error(f"Erreur lors de l'inscription à l'événement {event_id}: {str(e)}")
+        except CustomValidationError as e:
             db.session.rollback()
-            flash(f'Erreur lors de l\'inscription : {str(e)}', 'danger')
+            flash(str(e), 'danger')
+            return redirect(request.referrer or url_for('index'))
+        
+        except Exception as e:
+            db.session.rollback()
+            log_error('critical', f"Erreur lors de l'inscription à l'événement {event_id}", str(e))
+            flash('Une erreur inattendue est survenue lors de l\'inscription.', 'error')
             return redirect(request.referrer or url_for('index'))
 
     @app.route('/event/unregister/<int:event_id>', methods=['POST', 'GET'])
     @login_required
     def unregister_event(event_id):
+        """
+        Route de désinscription d'un événement.
+        
+        Permet à un utilisateur connecté de se désinscrire d'un événement.
+        
+        :param event_id: ID de l'événement
+        """
         print(" DIAGNOSTIC COMPLET DE LA ROUTE DE DÉSINSCRIPTION ")
         print(f" ID Événement : {event_id}")
         print(f" Utilisateur connecté : {current_user.username}")
@@ -247,6 +341,11 @@ def create_app():
     @app.route('/admin')
     @login_required
     def admin():
+        """
+        Route d'administration.
+        
+        Affiche la liste des utilisateurs et des événements pour les administrateurs.
+        """
         if not current_user.is_admin:
             return redirect(url_for('index'))
         
@@ -257,6 +356,11 @@ def create_app():
     @app.route('/admin/event/create', methods=['GET', 'POST'])
     @login_required
     def create_event():
+        """
+        Route de création d'événement.
+        
+        Permet aux administrateurs de créer de nouveaux événements.
+        """
         if not current_user.is_admin:
             flash('Vous n\'avez pas les droits pour créer un événement', 'danger')
             return redirect(url_for('index'))
@@ -311,6 +415,13 @@ def create_app():
     @app.route('/admin/edit_event/<int:event_id>', methods=['GET', 'POST'])
     @login_required
     def edit_event(event_id):
+        """
+        Route d'édition d'événement.
+        
+        Permet aux administrateurs de modifier les événements existants.
+        
+        :param event_id: ID de l'événement
+        """
         event = Event.query.get_or_404(event_id)
         
         # Ensure only admin can edit events
@@ -386,117 +497,86 @@ def create_app():
     @app.route('/super_admin', methods=['GET', 'POST'])
     @login_required
     def super_admin():
-        # Vérifier et définir le super administrateur par défaut si nécessaire
-        default_super_admin = User.query.filter_by(username='pogoparis').first()
-        if default_super_admin and not default_super_admin.is_super_admin:
-            default_super_admin.is_super_admin = True
-            db.session.commit()
-
-        if not current_user.is_super_admin:
-            flash('Accès non autorisé', 'danger')
-            return redirect(url_for('index'))
-
-        # Formulaire de création d'utilisateur/admin
-        create_form = SuperAdminForm()
+        """
+        Route de super-administration.
         
-        # Formulaire de modification et suppression
-        modify_user_form = ModifyUserForm()
-        delete_user_form = DeleteUserForm()
-        
-        # Gestion de la création d'utilisateur/admin
-        if create_form.validate_on_submit():
-            existing_user = User.query.filter(
-                (User.username == create_form.username.data) | (User.email == create_form.email.data)
-            ).first()
+        Permet aux super-administrateurs de gérer les utilisateurs et les administrateurs.
+        """
+        try:
+            # Vérifier et définir le super administrateur par défaut si nécessaire
+            default_super_admin = User.query.filter_by(username='pogoparis').first()
+            if default_super_admin and not default_super_admin.is_super_admin:
+                default_super_admin.is_super_admin = True
+                db.session.commit()
 
-            if existing_user:
-                flash('Un utilisateur avec ce nom ou email existe déjà.', 'danger')
-            else:
-                new_user = User(
-                    username=create_form.username.data, 
-                    email=create_form.email.data, 
-                    is_admin=create_form.action.data == 'create_admin',
-                    is_super_admin=False
-                )
-                new_user.set_password(create_form.password.data)
-                
+            if not current_user.is_super_admin:
+                log_error('warning', 'Tentative d\'accès à la page super admin sans autorisation')
+                flash('Vous n\'avez pas les droits d\'accès à cette page.', 'danger')
+                return redirect(url_for('index'))
+
+            form = SuperAdminForm()
+            delete_user_form = DeleteUserForm()
+            modify_user_form = ModifyUserForm()
+
+            # Récupérer les utilisateurs et administrateurs
+            users = User.query.filter_by(is_admin=False, is_super_admin=False).all()
+            admins = User.query.filter_by(is_admin=True, is_super_admin=False).all()
+
+            if form.validate_on_submit():
                 try:
+                    # Logique de création d'utilisateur/admin
+                    existing_user = User.query.filter(
+                        (User.username == form.username.data) | 
+                        (User.email == form.email.data)
+                    ).first()
+
+                    if existing_user:
+                        raise CustomValidationError('Ce nom d\'utilisateur ou email existe déjà')
+
+                    new_user = User(
+                        username=form.username.data,
+                        email=form.email.data,
+                        password_hash=generate_password_hash(form.password.data)
+                    )
+
+                    # Définir le rôle en fonction de l'action
+                    if form.action.data == 'create_admin':
+                        new_user.is_admin = True
+                    
                     db.session.add(new_user)
                     db.session.commit()
-                    flash(f'Nouvel {"administrateur" if create_form.action.data == "create_admin" else "utilisateur"} créé avec succès.', 'success')
+                    
+                    flash(f'{"Administrateur" if new_user.is_admin else "Utilisateur"} créé avec succès', 'success')
+                    return redirect(url_for('super_admin'))
+
+                except CustomValidationError as e:
+                    db.session.rollback()
+                    flash(str(e), 'danger')
                 except Exception as e:
                     db.session.rollback()
-                    flash(f'Erreur lors de la création : {str(e)}', 'danger')
-        
-            return redirect(url_for('super_admin'))
-        
-        # Gestion de la modification d'utilisateur
-        if modify_user_form.validate_on_submit():
-            user_id = modify_user_form.user_id.data
-            user = User.query.get(user_id)
-            
-            if user:
-                # Vérifier si le nouveau nom d'utilisateur ou email existe déjà
-                existing_user = User.query.filter(
-                    ((User.username == modify_user_form.username.data) | 
-                     (User.email == modify_user_form.email.data)) &
-                    (User.id != user.id)
-                ).first()
-                
-                if existing_user:
-                    flash('Un utilisateur avec ce nom ou email existe déjà.', 'danger')
-                else:
-                    user.username = modify_user_form.username.data
-                    user.email = modify_user_form.email.data
-                    
-                    # Mise à jour du mot de passe si fourni
-                    if modify_user_form.password.data:
-                        user.set_password(modify_user_form.password.data)
-                    
-                    try:
-                        db.session.commit()
-                        flash('Utilisateur modifié avec succès.', 'success')
-                    except Exception as e:
-                        db.session.rollback()
-                        flash(f'Erreur lors de la modification : {str(e)}', 'danger')
-            
-            return redirect(url_for('super_admin'))
-        
-        # Gestion de la suppression d'utilisateur
-        if delete_user_form.validate_on_submit():
-            user_id = delete_user_form.user_id.data
-            user = User.query.get(user_id)
-            
-            if user and user.username != 'pogoparis':
-                try:
-                    # Supprimer les inscriptions associées
-                    Registration.query.filter_by(user_id=user.id).delete()
-                    
-                    db.session.delete(user)
-                    db.session.commit()
-                    flash('Utilisateur supprimé avec succès.', 'success')
-                except Exception as e:
-                    db.session.rollback()
-                    flash(f'Erreur lors de la suppression : {str(e)}', 'danger')
-            else:
-                flash('Impossible de supprimer cet utilisateur.', 'danger')
-            
-            return redirect(url_for('super_admin'))
+                    log_error('error', 'Erreur lors de la création d\'un utilisateur', str(e))
+                    flash('Une erreur est survenue lors de la création.', 'error')
 
-        # Récupérer les listes d'utilisateurs et d'administrateurs
-        admins = User.query.filter_by(is_admin=True).all()
-        users = User.query.filter_by(is_admin=False).all()
+            return render_template('super_admin.html', 
+                                   create_form=form, 
+                                   delete_user_form=delete_user_form,
+                                   modify_user_form=modify_user_form,
+                                   users=users, 
+                                   admins=admins)
 
-        return render_template('super_admin.html', 
-                               admins=admins, 
-                               users=users,
-                               create_form=create_form,
-                               modify_user_form=modify_user_form,
-                               delete_user_form=delete_user_form)
+        except Exception as e:
+            log_error('critical', 'Erreur dans la route super_admin', str(e))
+            flash('Une erreur inattendue est survenue.', 'error')
+            return redirect(url_for('index'))
 
     @app.route('/profile', methods=['GET', 'POST'])
     @login_required
     def profile():
+        """
+        Route de profil utilisateur.
+        
+        Permet aux utilisateurs de modifier leurs informations personnelles.
+        """
         form = ProfileForm(obj=current_user)
         form.username.data = current_user.username
         
@@ -531,6 +611,11 @@ def create_app():
     @app.route('/events/archived', methods=['GET'])
     @login_required
     def list_events():
+        """
+        Route de liste des événements archivés.
+        
+        Affiche la liste des événements archivés pour les administrateurs.
+        """
         if not (current_user.is_admin or current_user.username == 'pogoparis'):
             flash('Vous n\'avez pas la permission de voir les événements archivés.', 'danger')
             return redirect(url_for('index'))
@@ -549,6 +634,13 @@ def create_app():
     @app.route('/event/archive/<int:event_id>', methods=['POST'])
     @login_required
     def archive_event(event_id):
+        """
+        Route d'archivage d'événement.
+        
+        Permet aux administrateurs d'archiver les événements.
+        
+        :param event_id: ID de l'événement
+        """
         if not (current_user.is_admin or current_user.username == 'pogoparis'):
             flash('Vous n\'avez pas les droits pour archiver un événement', 'danger')
             return redirect(url_for('index'))
@@ -569,6 +661,8 @@ def create_app():
     @app.cli.command("reset_database")
     def reset_database():
         """
+        Commande de réinitialisation de la base de données.
+        
         Réinitialise complètement la base de données.
         À utiliser uniquement en développement pour résoudre les problèmes de migration.
         """
@@ -595,7 +689,9 @@ def create_app():
 
     return app
 
+# Création de l'instance d'application
 app = create_app()
 
+# Point d'entrée principal
 if __name__ == '__main__':
     app.run(debug=True)

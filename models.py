@@ -1,9 +1,28 @@
+# Importations des bibliothèques nécessaires pour la gestion des modèles de données
 from flask_login import UserMixin
 from datetime import datetime
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(UserMixin, db.Model):
+    """
+    Modèle représentant un utilisateur dans le système.
+    
+    Hérite de UserMixin pour une intégration facile avec Flask-Login
+    et de db.Model pour la persistance des données avec SQLAlchemy.
+    
+    Attributs:
+    - id: Identifiant unique de l'utilisateur
+    - username: Nom d'utilisateur unique
+    - email: Adresse email unique
+    - password_hash: Mot de passe haché pour la sécurité
+    - first_name: Prénom de l'utilisateur (optionnel)
+    - last_name: Nom de famille de l'utilisateur (optionnel)
+    - phone: Numéro de téléphone de l'utilisateur (optionnel)
+    - is_admin: Indique si l'utilisateur est un administrateur
+    - is_super_admin: Indique si l'utilisateur est un super administrateur
+    - registrations: Liste des inscriptions de l'utilisateur aux événements
+    """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -33,6 +52,24 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Event(db.Model):
+    """
+    Modèle représentant un événement dans le système.
+    
+    Attributs:
+    - id: Identifiant unique de l'événement
+    - title: Titre de l'événement
+    - description: Description détaillée de l'événement
+    - date: Date et heure de l'événement
+    - location: Lieu de l'événement
+    - organizer: Organisateur de l'événement
+    - capacity: Nombre maximum de participants
+    - price: Prix de l'événement
+    - additional_info: Informations supplémentaires
+    - address: Adresse complète de l'événement
+    - is_active: Statut actif/inactif de l'événement
+    - image_url: URL de l'image de l'événement
+    - registrations: Liste des inscriptions à l'événement
+    """
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -48,6 +85,13 @@ class Event(db.Model):
     registrations = db.relationship('Registration', backref='event', lazy='dynamic')
 
     def is_past_event(self):
+        """
+        Détermine si l'événement est un événement passé.
+        
+        Compare la date de l'événement avec la date et l'heure actuelles.
+        
+        :return: True si l'événement est passé, False sinon
+        """
         # Utiliser datetime.now() avec timezone aware si possible
         current_time = datetime.now()
         
@@ -82,19 +126,48 @@ class Event(db.Model):
         return is_past
 
     def update_active_status(self):
+        """
+        Met à jour le statut actif de l'événement en fonction de sa date.
+        
+        Définit is_active à False si l'événement est passé.
+        """
         self.is_active = not self.is_past_event()
 
     def is_registration_possible(self):
+        """
+        Vérifie si l'inscription à l'événement est possible.
+        
+        :return: True si l'événement n'est pas passé et a des places disponibles, False sinon
+        """
         return (not self.is_past_event() and 
                 (self.capacity is None or self.get_remaining_spots() > 0))
 
     def get_registration_count(self):
+        """
+        Compte le nombre d'inscriptions à l'événement.
+        
+        :return: Nombre total d'inscriptions
+        """
         return self.registrations.count()
 
     def get_remaining_spots(self):
+        """
+        Calcule le nombre de places restantes.
+        
+        :return: Nombre de places restantes ou infini si pas de limite
+        """
         return self.capacity - self.get_registration_count() if self.capacity else float('inf')
 
 class Registration(db.Model):
+    """
+    Modèle représentant une inscription à un événement.
+    
+    Attributs:
+    - id: Identifiant unique de l'inscription
+    - user_id: Identifiant de l'utilisateur inscrit
+    - event_id: Identifiant de l'événement
+    - registration_date: Date et heure de l'inscription
+    """
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)

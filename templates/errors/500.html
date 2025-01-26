@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <h1 class="display-4 text-danger">500</h1>
+            <h2>Erreur Interne du Serveur</h2>
+            <p class="lead">Une erreur inattendue s'est produite. Nos équipes techniques ont été averties.</p>
+            <div class="mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">Retour à l'accueil</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
