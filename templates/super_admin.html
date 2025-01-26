@@ -12,32 +12,31 @@
                     Créer un Nouvel Utilisateur ou Administrateur
                 </div>
                 <div class="card-body">
-                    <form method="POST" id="create-user-form">
-                        {{ create_form.hidden_tag() }}
-                        <input type="hidden" name="csrf_token" id="csrf_token_create" value="{{ create_form.csrf_token.current_token }}">
+                    <form method="POST" id="create-user-form-main">
+                        <input type="hidden" name="csrf_token" id="csrf_token_create_main" value="{{ create_form.csrf_token.current_token }}">
                         
                         <div class="mb-3">
-                            {{ create_form.action.label(class="form-label") }}
-                            {{ create_form.action(class="form-select", id="action-select") }}
+                            {{ create_form.action.label(class="form-label", for="action-select-main") }}
+                            {{ create_form.action(class="form-select", id="action-select-main", autocomplete="off") }}
                         </div>
                         
                         <div class="mb-3">
-                            {{ create_form.username.label(class="form-label") }}
-                            {{ create_form.username(class="form-control") }}
+                            {{ create_form.username.label(class="form-label", for="username-create-main") }}
+                            {{ create_form.username(class="form-control", id="username-create-main", autocomplete="username") }}
                         </div>
                         
                         <div class="mb-3">
-                            {{ create_form.email.label(class="form-label") }}
-                            {{ create_form.email(class="form-control") }}
+                            {{ create_form.email.label(class="form-label", for="email-create-main") }}
+                            {{ create_form.email(class="form-control", id="email-create-main", autocomplete="email") }}
                         </div>
                         
                         <div class="mb-3">
-                            {{ create_form.password.label(class="form-label") }}
-                            {{ create_form.password(class="form-control") }}
+                            {{ create_form.password.label(class="form-label", for="password-create-main") }}
+                            {{ create_form.password(class="form-control", id="password-create-main", autocomplete="new-password") }}
                         </div>
                         
                         <div class="d-grid">
-                            {{ create_form.submit(class="btn btn-primary", id="submit-button") }}
+                            {{ create_form.submit(class="btn btn-primary", id="submit-button-main") }}
                         </div>
                     </form>
                 </div>
@@ -77,27 +76,24 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form method="POST" id="modify-admin-form-{{ admin.id }}">
-                                                {{ modify_user_form.hidden_tag() }}
-                                                <input type="hidden" name="csrf_token" id="csrf_token_modify_admin_{{ admin.id }}" value="{{ modify_user_form.csrf_token.current_token }}">
+                                            <form method="POST" id="modify-admin-form-{{ admin.id }}-unique">
+                                                <input type="hidden" name="csrf_token" id="csrf_token_modify_admin_{{ admin.id }}_unique" value="{{ modify_user_form.csrf_token.current_token }}">
                                                 <input type="hidden" name="user_id" value="{{ admin.id }}">
                                                 
                                                 <div class="mb-3">
-                                                    {{ modify_user_form.username.label(class="form-label") }}
-                                                    {{ modify_user_form.username(class="form-control", value=admin.username) }}
+                                                    {{ modify_user_form.username.label(class="form-label", for="username-modify-admin-" ~ admin.id ~ "-" ~ loop.index) }}
+                                                    {{ modify_user_form.username(class="form-control", id="username-modify-admin-" ~ admin.id ~ "-" ~ loop.index, value=admin.username, autocomplete="username") }}
                                                 </div>
                                                 <div class="mb-3">
-                                                    {{ modify_user_form.email.label(class="form-label") }}
-                                                    {{ modify_user_form.email(class="form-control", value=admin.email) }}
+                                                    {{ modify_user_form.email.label(class="form-label", for="email-modify-admin-" ~ admin.id ~ "-" ~ loop.index) }}
+                                                    {{ modify_user_form.email(class="form-control", id="email-modify-admin-" ~ admin.id ~ "-" ~ loop.index, value=admin.email, autocomplete="email") }}
                                                 </div>
                                                 <div class="mb-3">
-                                                    {{ modify_user_form.password.label(class="form-label") }}
-                                                    {{ modify_user_form.password(class="form-control") }}
+                                                    {{ modify_user_form.password.label(class="form-label", for="password-modify-admin-" ~ admin.id ~ "-" ~ loop.index) }}
+                                                    {{ modify_user_form.password(class="form-control", id="password-modify-admin-" ~ admin.id ~ "-" ~ loop.index, autocomplete="new-password") }}
                                                 </div>
-                                                
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                                    {{ modify_user_form.submit(class="btn btn-primary") }}
+                                                <div class="d-grid">
+                                                    <button type="submit" class="btn btn-warning">Modifier</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -119,16 +115,13 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form method="POST" id="delete-admin-form-{{ admin.id }}">
-                                                {{ delete_user_form.hidden_tag() }}
-                                                <input type="hidden" name="csrf_token" id="csrf_token_delete_admin_{{ admin.id }}" value="{{ delete_user_form.csrf_token.current_token }}">
+                                            <form method="POST" id="delete-admin-form-{{ admin.id }}-unique">
+                                                <input type="hidden" name="csrf_token" id="csrf_token_delete_admin_{{ admin.id }}_unique" value="{{ delete_user_form.csrf_token.current_token }}">
                                                 <input type="hidden" name="user_id" value="{{ admin.id }}">
                                                 
                                                 <p>Êtes-vous sûr de vouloir supprimer l'administrateur {{ admin.username }} ?</p>
-                                                
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                                    {{ delete_user_form.submit(class="btn btn-danger") }}
+                                                <div class="d-grid">
+                                                    <button type="submit" class="btn btn-danger">Supprimer</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -175,27 +168,24 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form method="POST" id="modify-user-form-{{ user.id }}">
-                                                {{ modify_user_form.hidden_tag() }}
-                                                <input type="hidden" name="csrf_token" id="csrf_token_modify_user_{{ user.id }}" value="{{ modify_user_form.csrf_token.current_token }}">
+                                            <form method="POST" id="modify-user-form-{{ user.id }}-unique">
+                                                <input type="hidden" name="csrf_token" id="csrf_token_modify_user_{{ user.id }}_unique" value="{{ modify_user_form.csrf_token.current_token }}">
                                                 <input type="hidden" name="user_id" value="{{ user.id }}">
                                                 
                                                 <div class="mb-3">
-                                                    {{ modify_user_form.username.label(class="form-label") }}
-                                                    {{ modify_user_form.username(class="form-control", value=user.username) }}
+                                                    {{ modify_user_form.username.label(class="form-label", for="username-modify-user-" ~ user.id ~ "-" ~ loop.index) }}
+                                                    {{ modify_user_form.username(class="form-control", id="username-modify-user-" ~ user.id ~ "-" ~ loop.index, value=user.username, autocomplete="username") }}
                                                 </div>
                                                 <div class="mb-3">
-                                                    {{ modify_user_form.email.label(class="form-label") }}
-                                                    {{ modify_user_form.email(class="form-control", value=user.email) }}
+                                                    {{ modify_user_form.email.label(class="form-label", for="email-modify-user-" ~ user.id ~ "-" ~ loop.index) }}
+                                                    {{ modify_user_form.email(class="form-control", id="email-modify-user-" ~ user.id ~ "-" ~ loop.index, value=user.email, autocomplete="email") }}
                                                 </div>
                                                 <div class="mb-3">
-                                                    {{ modify_user_form.password.label(class="form-label") }}
-                                                    {{ modify_user_form.password(class="form-control") }}
+                                                    {{ modify_user_form.password.label(class="form-label", for="password-modify-user-" ~ user.id ~ "-" ~ loop.index) }}
+                                                    {{ modify_user_form.password(class="form-control", id="password-modify-user-" ~ user.id ~ "-" ~ loop.index, autocomplete="new-password") }}
                                                 </div>
-                                                
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                                    {{ modify_user_form.submit(class="btn btn-primary") }}
+                                                <div class="d-grid">
+                                                    <button type="submit" class="btn btn-warning">Modifier</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -217,16 +207,13 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form method="POST" id="delete-user-form-{{ user.id }}">
-                                                {{ delete_user_form.hidden_tag() }}
-                                                <input type="hidden" name="csrf_token" id="csrf_token_delete_user_{{ user.id }}" value="{{ delete_user_form.csrf_token.current_token }}">
+                                            <form method="POST" id="delete-user-form-{{ user.id }}-unique">
+                                                <input type="hidden" name="csrf_token" id="csrf_token_delete_user_{{ user.id }}_unique" value="{{ delete_user_form.csrf_token.current_token }}">
                                                 <input type="hidden" name="user_id" value="{{ user.id }}">
                                                 
                                                 <p>Êtes-vous sûr de vouloir supprimer l'utilisateur {{ user.username }} ?</p>
-                                                
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                                    {{ delete_user_form.submit(class="btn btn-danger") }}
+                                                <div class="d-grid">
+                                                    <button type="submit" class="btn btn-danger">Supprimer</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -245,8 +232,8 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const actionSelect = document.getElementById('action-select');
-    const submitButton = document.getElementById('submit-button');
+    const actionSelect = document.getElementById('action-select-main');
+    const submitButton = document.getElementById('submit-button-main');
 
     function updateButtonText() {
         const selectedOption = actionSelect.options[actionSelect.selectedIndex];
