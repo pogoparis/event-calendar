@@ -56,27 +56,37 @@
                 <div class="modal fade" id="archiveEventModal{{ event.id }}" tabindex="-1" aria-labelledby="archiveEventModalLabel{{ event.id }}" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
-                            <div class="modal-header bg-warning text-white">
+                            <div class="modal-header {% if event.is_active %}bg-warning{% else %}bg-success{% endif %} text-white">
                                 <h5 class="modal-title" id="archiveEventModalLabel{{ event.id }}">
-                                    <i class="fas fa-archive"></i> Confirmation d'archivage
+                                    <i class="fas fa-{% if event.is_active %}archive{% else %}undo{% endif %}"></i> 
+                                    {% if event.is_active %}Confirmation d'archivage{% else %}Confirmation de réactivation{% endif %}
                                 </h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body text-center">
-                                <p class="lead">Êtes-vous sûr de vouloir archiver l'événement :</p>
+                                <p class="lead">
+                                    {% if event.is_active %}
+                                    Êtes-vous sûr de vouloir archiver l'événement :
+                                    {% else %}
+                                    Êtes-vous sûr de vouloir réactiver l'événement :
+                                    {% endif %}
+                                </p>
                                 <h4 class="text-danger">{{ event.title }}</h4>
                                 <p class="text-muted">
                                     <i class="fas fa-info-circle"></i> 
+                                    {% if event.is_active %}
                                     Cette action rendra l'événement inactif et non visible pour les utilisateurs.
+                                    {% else %}
+                                    Cette action rendra l'événement à nouveau disponible pour tous les utilisateurs.
+                                    {% endif %}
                                 </p>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    <i class="fas fa-times"></i> Annuler
-                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                                 <form method="POST" action="{{ url_for('archive_event', event_id=event.id) }}" class="d-inline">
-                                    <button type="submit" class="btn btn-danger">
-                                        <i class="fas fa-check"></i> Confirmer l'archivage
+                                    <button type="submit" class="btn {% if event.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                                        <i class="fas fa-{% if event.is_active %}archive{% else %}undo{% endif %}"></i> 
+                                        {% if event.is_active %}Confirmer l'archivage{% else %}Confirmer la réactivation{% endif %}
                                     </button>
                                 </form>
                             </div>
