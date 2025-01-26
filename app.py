@@ -12,7 +12,7 @@ from config import Config
 from extensions import db, migrate, login_manager
 from models import User, Event, Registration
 from forms import (LoginForm, RegisterForm, CreateEventForm, ProfileForm, 
-                   UnregisterEventForm, ArchiveEventForm, SuperAdminForm, DeleteUserForm)
+                   UnregisterEventForm, ArchiveEventForm, SuperAdminForm, DeleteUserForm, ModifyUserForm)
 
 def create_app():
     app = Flask(__name__)
@@ -386,38 +386,90 @@ def create_app():
     @app.route('/super_admin', methods=['GET', 'POST'])
     @login_required
     def super_admin():
-        if not current_user.is_admin or current_user.username != 'pogoparis':
-            flash('Vous n\'avez pas les autorisations requises.', 'danger')
+        # Vérifier et définir le super administrateur par défaut si nécessaire
+        default_super_admin = User.query.filter_by(username='pogoparis').first()
+        if default_super_admin and not default_super_admin.is_super_admin:
+            default_super_admin.is_super_admin = True
+            db.session.commit()
+
+        if not current_user.is_super_admin:
+            flash('Accès non autorisé', 'danger')
             return redirect(url_for('index'))
+
+        # Formulaire de création d'utilisateur/admin
+        create_form = SuperAdminForm()
         
-        form = SuperAdminForm()
+        # Formulaire de modification et suppression
+        modify_user_form = ModifyUserForm()
         delete_user_form = DeleteUserForm()
         
-        if form.validate_on_submit():
-            existing_user = User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first()
+        # Gestion de la création d'utilisateur/admin
+        if create_form.validate_on_submit():
+            existing_user = User.query.filter(
+                (User.username == create_form.username.data) | (User.email == create_form.email.data)
+            ).first()
+
             if existing_user:
                 flash('Un utilisateur avec ce nom ou email existe déjà.', 'danger')
             else:
                 new_user = User(
-                    username=form.username.data, 
-                    email=form.email.data, 
-                    password_hash=generate_password_hash(form.password.data),
-                    is_admin=form.action.data == 'create_admin'
+                    username=create_form.username.data, 
+                    email=create_form.email.data, 
+                    is_admin=create_form.action.data == 'create_admin',
+                    is_super_admin=False
                 )
-                db.session.add(new_user)
+                new_user.set_password(create_form.password.data)
+                
                 try:
+                    db.session.add(new_user)
                     db.session.commit()
-                    flash(f'Nouvel {"administrateur" if form.action.data == "create_admin" else "utilisateur"} créé avec succès.', 'success')
+                    flash(f'Nouvel {"administrateur" if create_form.action.data == "create_admin" else "utilisateur"} créé avec succès.', 'success')
                 except Exception as e:
                     db.session.rollback()
                     flash(f'Erreur lors de la création : {str(e)}', 'danger')
         
+            return redirect(url_for('super_admin'))
+        
+        # Gestion de la modification d'utilisateur
+        if modify_user_form.validate_on_submit():
+            user_id = modify_user_form.user_id.data
+            user = User.query.get(user_id)
+            
+            if user:
+                # Vérifier si le nouveau nom d'utilisateur ou email existe déjà
+                existing_user = User.query.filter(
+                    ((User.username == modify_user_form.username.data) | 
+                     (User.email == modify_user_form.email.data)) &
+                    (User.id != user.id)
+                ).first()
+                
+                if existing_user:
+                    flash('Un utilisateur avec ce nom ou email existe déjà.', 'danger')
+                else:
+                    user.username = modify_user_form.username.data
+                    user.email = modify_user_form.email.data
+                    
+                    # Mise à jour du mot de passe si fourni
+                    if modify_user_form.password.data:
+                        user.set_password(modify_user_form.password.data)
+                    
+                    try:
+                        db.session.commit()
+                        flash('Utilisateur modifié avec succès.', 'success')
+                    except Exception as e:
+                        db.session.rollback()
+                        flash(f'Erreur lors de la modification : {str(e)}', 'danger')
+            
+            return redirect(url_for('super_admin'))
+        
+        # Gestion de la suppression d'utilisateur
         if delete_user_form.validate_on_submit():
             user_id = delete_user_form.user_id.data
             user = User.query.get(user_id)
             
             if user and user.username != 'pogoparis':
                 try:
+                    # Supprimer les inscriptions associées
                     Registration.query.filter_by(user_id=user.id).delete()
                     
                     db.session.delete(user)
@@ -425,18 +477,21 @@ def create_app():
                     flash('Utilisateur supprimé avec succès.', 'success')
                 except Exception as e:
                     db.session.rollback()
-                    flash(f'Erreur lors de la suppression de l\'utilisateur: {str(e)}', 'danger')
+                    flash(f'Erreur lors de la suppression : {str(e)}', 'danger')
             else:
                 flash('Impossible de supprimer cet utilisateur.', 'danger')
-        
+            
+            return redirect(url_for('super_admin'))
+
+        # Récupérer les listes d'utilisateurs et d'administrateurs
         admins = User.query.filter_by(is_admin=True).all()
-        
         users = User.query.filter_by(is_admin=False).all()
-        
+
         return render_template('super_admin.html', 
                                admins=admins, 
                                users=users,
-                               form=form,
+                               create_form=create_form,
+                               modify_user_form=modify_user_form,
                                delete_user_form=delete_user_form)
 
     @app.route('/profile', methods=['GET', 'POST'])

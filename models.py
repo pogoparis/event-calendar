@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(80), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
+    is_super_admin = db.Column(db.Boolean, default=False)
     registrations = db.relationship('Registration', backref='user', lazy=True)
 
     def set_password(self, password):

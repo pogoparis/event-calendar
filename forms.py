@@ -88,8 +88,27 @@ class SuperAdminForm(FlaskForm):
         ('create_user', 'Créer un utilisateur'), 
         ('create_admin', 'Créer un administrateur')
     ], validators=[DataRequired()])
-    submit = SubmitField('Exécuter', render_kw={'id': 'super_admin_submit'})
+    submit = SubmitField('Créer', render_kw={'id': 'super_admin_submit', 'class': 'btn btn-primary'})
 
 class DeleteUserForm(FlaskForm):
     user_id = HiddenField('ID Utilisateur', validators=[DataRequired()])
     submit = SubmitField('Supprimer', render_kw={'id': 'delete_user_submit'})
+
+class ModifyUserForm(FlaskForm):
+    """
+    Formulaire pour modifier les informations d'un utilisateur
+    """
+    user_id = IntegerField('ID Utilisateur', validators=[DataRequired()])
+    username = StringField('Nom d\'utilisateur', validators=[
+        DataRequired(message='Le nom d\'utilisateur est requis'),
+        Length(min=3, max=80, message='Le nom d\'utilisateur doit faire entre 3 et 80 caractères')
+    ])
+    email = StringField('Email', validators=[
+        DataRequired(message='L\'email est requis'),
+        Email(message='Email invalide')
+    ])
+    password = PasswordField('Nouveau mot de passe (optionnel)', validators=[
+        Optional(),
+        Length(min=6, message='Le mot de passe doit faire au moins 6 caractères')
+    ])
+    submit = SubmitField('Enregistrer les modifications')
