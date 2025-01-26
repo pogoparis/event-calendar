@@ -63,15 +63,45 @@
         </div>
         <div class="col-2 text-end">
             {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_super_admin) %}
-                <form action="{{ url_for('archive_event', event_id=event.id) }}" method="POST" class="d-inline">
-                    {{ form.csrf_token }}
-                    {% if event.is_active %}
-                    <button type="submit" class="btn btn-secondary" onclick="return confirm('Voulez-vous vraiment archiver cet événement ?')">
-                        Archiver l'événement
-                    </button>
-                    {% endif %}
-                </form>
+                {% if event.is_active %}
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#archiveEventModal">
+                    Archiver l'événement
+                </button>
+                {% endif %}
             {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal d'archivage de l'événement -->
+    <div class="modal fade" id="archiveEventModal" tabindex="-1" aria-labelledby="archiveEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="archiveEventModalLabel">
+                        <i class="fas fa-archive"></i> Confirmation d'archivage
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="lead">Êtes-vous sûr de vouloir archiver l'événement :</p>
+                    <h4 class="text-danger">{{ event.title }}</h4>
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Cette action rendra l'événement inactif et non visible pour les utilisateurs.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                    <form action="{{ url_for('archive_event', event_id=event.id) }}" method="POST" class="d-inline">
+                        {{ form.csrf_token }}
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-archive"></i> Confirmer l'archivage
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -43,13 +43,42 @@
                                 <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-secondary btn-sm">Détails</a>
                                 
                                 {% if current_user.is_admin or current_user.username == 'pogoparis' %}
-                                    <form method="POST" action="{{ url_for('archive_event', event_id=event.id) }}" class="d-inline">
-                                        <button type="submit" class="btn btn-sm {% if event.is_active %}btn-warning{% else %}btn-success{% endif %}" 
-                                                onclick="return confirm('Voulez-vous vraiment {{ 'désarchiver' if not event.is_active else 'archiver' }} cet événement ?')">
-                                            {% if event.is_active %}Archiver{% else %}Désarchiver{% endif %}
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-sm {% if event.is_active %}btn-warning{% else %}btn-success{% endif %}" data-bs-toggle="modal" data-bs-target="#archiveEventModal{{ event.id }}">
+                                        {% if event.is_active %}Archiver{% else %}Désarchiver{% endif %}
+                                    </button>
                                 {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal d'archivage pour chaque événement -->
+                <div class="modal fade" id="archiveEventModal{{ event.id }}" tabindex="-1" aria-labelledby="archiveEventModalLabel{{ event.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning text-white">
+                                <h5 class="modal-title" id="archiveEventModalLabel{{ event.id }}">
+                                    <i class="fas fa-archive"></i> Confirmation d'archivage
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <p class="lead">Êtes-vous sûr de vouloir archiver l'événement :</p>
+                                <h4 class="text-danger">{{ event.title }}</h4>
+                                <p class="text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Cette action rendra l'événement inactif et non visible pour les utilisateurs.
+                                </p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times"></i> Annuler
+                                </button>
+                                <form method="POST" action="{{ url_for('archive_event', event_id=event.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-check"></i> Confirmer l'archivage
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -62,4 +91,17 @@
         </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const archiveModals = document.querySelectorAll('.modal');
+    archiveModals.forEach(modal => {
+        modal.addEventListener('shown.bs.modal', function() {
+            this.querySelector('.btn-close').focus();
+        });
+    });
+});
+</script>
 {% endblock %}
