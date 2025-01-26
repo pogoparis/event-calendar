@@ -52,6 +52,14 @@ class User(UserMixin, db.Model):
         """
         return check_password_hash(self.password_hash, password)
 
+    def get_registered_event_ids(self):
+        """
+        Retourne la liste des IDs des événements auxquels l'utilisateur est inscrit.
+        
+        :return: Liste des IDs des événements
+        """
+        return [registration.event_id for registration in self.registrations]
+
 class Event(db.Model):
     """
     Modèle représentant un événement dans le système.
@@ -190,21 +198,7 @@ class Event(db.Model):
                     # Retourner le chemin exact comme stocké dans la base de données
                     return self.image_url.replace('/static/', '')
         
-        # Dictionnaire de mapping des catégories d'événements
-        event_categories = {
-            'Conférence': 'conference.jpg',
-            'Festival': 'festival.jpg',
-            'Salon': 'salon.jpg',
-            'Marathon': 'marathon.jpg',
-            'Atelier': 'atelier.jpg'
-        }
-        
-        # Trouver la catégorie correspondante
-        for category, default_image in event_categories.items():
-            if category.lower() in self.title.lower():
-                return f'images/default/{default_image}'
-        
-        # Image générique par défaut si aucune correspondance
+        # Image générique par défaut
         return 'images/default/event.jpg'
 
 class Registration(db.Model):

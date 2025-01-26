@@ -131,16 +131,18 @@ def create_app():
             print(f"- {event.title} : {event.date}")
         
         # Récupérer les événements inscrits de l'utilisateur
-        user_registered_events = []
-        if current_user.is_authenticated:
-            user_registered_events = [reg.event_id for reg in current_user.registrations]
+        user_registrations = current_user.get_registered_event_ids() if current_user.is_authenticated else []
+        
+        print("\n--- DÉBOGAGE ÉVÉNEMENTS INSCRITS ---")
+        print(f"Utilisateur authentifié : {current_user.is_authenticated}")
+        print(f"Événements inscrits : {user_registrations}")
         
         print("--- FIN DÉBOGAGE ---\n")
         
         return render_template('index.html', 
                                upcoming_events=upcoming_events, 
                                past_events=past_events,
-                               user_registered_events=user_registered_events,
+                               user_registrations=user_registrations,
                                datetime=datetime)
 
     @app.route('/login', methods=['GET', 'POST'])

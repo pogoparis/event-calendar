@@ -4,11 +4,16 @@
 <div class="container mt-4">
     <h1 class="mb-4">{{ title or 'Événements archivés' }}</h1>
     
+    {% set user_registrations = current_user.get_registered_event_ids() if current_user.is_authenticated else [] %}
+    
     {% if events %}
         <div class="row">
             {% for event in events %}
                 <div class="col-md-4 mb-4">
-                    <div class="card h-100 {% if not event.is_active %}border-warning{% endif %}">
+                    <div class="card h-100 {% if not event.is_active %}border-warning{% endif %} position-relative">
+                        {% if current_user.is_authenticated and event.id in user_registrations %}
+                            <span class="badge bg-success position-absolute top-0 end-0 m-2" style="z-index: 10; font-size: 0.7rem;">Inscrit</span>
+                        {% endif %}
                         <img src="{{ url_for('static', filename=event.get_event_image()) }}" class="card-img-top event-image" alt="{{ event.title }}" 
                              onerror="this.src='{{ url_for('static', filename='images/default/event.jpg') }}'"
                              style="height: 200px; object-fit: cover;">

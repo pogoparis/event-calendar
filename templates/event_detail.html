@@ -84,11 +84,15 @@
                     </div>
                 {% endif %}
                 
-                <img src="{{ url_for('static', filename=event.get_event_image()) }}" 
-                     class="card-img-top" 
-                     alt="{{ event.title }}"
-                     style="height: 300px; object-fit: cover;"
-                     onerror="this.src='{{ url_for('static', filename='images/default/event.jpg') }}'">
+                <div class="card {% if event.is_past_event %}bg-light text-muted{% endif %} position-relative">
+                    {% if current_user.is_authenticated and event.id in user_registrations %}
+                        <span class="badge bg-success position-absolute top-0 end-0 m-2" style="z-index: 10; font-size: 0.7rem;">Inscrit</span>
+                    {% endif %}
+                    <img src="{{ url_for('static', filename=event.get_event_image()) }}" 
+                         class="card-img-top" 
+                         alt="{{ event.title }}"
+                         style="height: 300px; object-fit: cover;"
+                         onerror="this.src='{{ url_for('static', filename='images/default/event.jpg') }}'">
                 
                 <div class="card-body">
                     <h2 class="card-title">{{ event.title }}</h2>
@@ -101,13 +105,10 @@
                             {% if event.is_registration_possible() %}
                                 {% if current_user.is_authenticated %}
                                     {% if event.id in user_registrations %}
-                                        <div class="alert alert-success mt-3">
-                                            Vous êtes inscrit à cet événement
+                                        <div class="d-grid mt-3">
                                             <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}">
                                                 {{ form.hidden_tag() }}
-                                                <div class="d-grid">
-                                                    {{ form.submit(class="btn btn-warning") }}
-                                                </div>
+                                                {{ form.submit(class="btn btn-warning") }}
                                             </form>
                                         </div>
                                     {% else %}
