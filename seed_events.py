@@ -2,6 +2,7 @@ from app import app, db, Event, User, Registration
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash
 import os
+from PIL import Image, ImageDraw, ImageFont
 
 def seed_events_with_registrations():
     with app.app_context():
@@ -34,91 +35,92 @@ def seed_events_with_registrations():
         
         db.session.commit()
         
-        # Créer des images de placeholder si elles n'existent pas
+        # Créer un répertoire pour les images d'événements s'il n'existe pas
         os.makedirs('static/uploads/events', exist_ok=True)
         
         # Événements à créer
         events_data = [
             {
-                'title': 'Conférence Tech Passée',
-                'description': 'Une conférence technologique qui a eu lieu récemment',
-                'date': datetime.now() - timedelta(days=30),
-                'location': 'Station F, Paris',
-                'organizer': 'Tech Innovators',
-                'capacity': 5,
-                'price': 50,
-                'address': '55 Boulevard Vincent Auriol, 75013 Paris',
-                'is_active': False,
-                'image_filename': 'past_conference.jpg'
-            },
-            {
-                'title': 'Atelier IA Archivé',
-                'description': 'Découvrez les dernières avancées en Intelligence Artificielle',
-                'date': datetime.now() + timedelta(days=60),
-                'location': 'NUMA, Paris',
-                'organizer': 'AI Lab',
-                'capacity': 5,
-                'price': 75,
-                'address': '39 Rue du Caire, 75002 Paris',
-                'is_active': False,
-                'image_filename': 'ai_workshop.jpg'
-            },
-            {
-                'title': 'Hackathon Développement Durable',
-                'description': 'Hackathon sur les solutions innovantes pour le développement durable',
-                'date': datetime.now() + timedelta(days=15),
-                'location': 'Le Wagon, Paris',
-                'organizer': 'Green Tech',
-                'capacity': 5,
-                'price': 0,
-                'address': '16 Villa Gaudelet, 75011 Paris',
-                'is_active': True,
-                'image_filename': 'hackathon.jpg'
-            },
-            {
-                'title': 'Soirée Networking Tech',
-                'description': 'Rencontrez les professionnels de la tech et développez votre réseau',
+                'title': 'Conférence Tech Innovante',
+                'description': 'Une journée complète dédiée aux dernières innovations technologiques.',
                 'date': datetime.now() + timedelta(days=30),
-                'location': 'WeWork, Paris',
-                'organizer': 'Tech Community',
-                'capacity': 5,
-                'price': 25,
-                'address': '7 Rue de Madrid, 75008 Paris',
+                'location': 'Palais des Congrès, Paris',
+                'organizer': 'Tech Innovations Inc.',
+                'capacity': 200,
+                'price': 99.99,
+                'address': '2 Place de la Porte Maillot, 75017 Paris',
                 'is_active': True,
-                'image_filename': 'networking.jpg'
+                'image_filename': 'tech_conference.jpg'
             },
             {
-                'title': 'Atelier Entrepreneuriat',
-                'description': 'Apprenez les bases de la création et du développement d\'entreprise',
-                'date': datetime.now() + timedelta(days=45),
-                'location': 'Paris&Co, Paris',
-                'organizer': 'Startup School',
-                'capacity': 5,
-                'price': 40,
-                'address': '50 Rue de Turbigo, 75003 Paris',
+                'title': 'Festival de Musique Électronique',
+                'description': 'Un week-end de musique électronique avec les meilleurs DJ internationaux.',
+                'date': datetime.now() + timedelta(days=60),
+                'location': 'Parc des Expositions, Lyon',
+                'organizer': 'Electro Events',
+                'capacity': 5000,
+                'price': 149.50,
+                'address': 'Rue de la Villette, 69003 Lyon',
                 'is_active': True,
-                'image_filename': 'entrepreneurship.jpg'
+                'image_filename': 'electro_festival.jpg'
+            },
+            {
+                'title': 'Salon du Vin et des Gastronomies',
+                'description': 'Découvrez les meilleurs vins et produits gastronomiques de France.',
+                'date': datetime.now() + timedelta(days=45),
+                'location': 'Parc des Expositions, Bordeaux',
+                'organizer': 'Bordeaux Wine Association',
+                'capacity': 1000,
+                'price': 25.00,
+                'address': 'Rue Jean Samazeuilh, 33300 Bordeaux',
+                'is_active': True,
+                'image_filename': 'wine_salon.jpg'
+            },
+            {
+                'title': 'Marathon de Paris',
+                'description': 'Le célèbre marathon traversant les plus beaux quartiers de Paris.',
+                'date': datetime.now() + timedelta(days=90),
+                'location': 'Champs-Élysées',
+                'organizer': 'Paris Marathon Organization',
+                'capacity': 40000,
+                'price': 120.00,
+                'address': 'Avenue des Champs-Élysées, 75008 Paris',
+                'is_active': True,
+                'image_filename': 'paris_marathon.jpg'
+            },
+            {
+                'title': 'Atelier de Cuisine Française',
+                'description': 'Apprenez à cuisiner des plats traditionnels français avec un chef renommé.',
+                'date': datetime.now() + timedelta(days=75),
+                'location': 'École de Cuisine Paris',
+                'organizer': 'École Culinaire Française',
+                'capacity': 20,
+                'price': 75.50,
+                'address': '12 Rue de la Cuisine, 75001 Paris',
+                'is_active': True,
+                'image_filename': 'cuisine_francaise.jpg'
             }
         ]
         
-        # Créer des images de placeholder
-        from PIL import Image, ImageDraw, ImageFont
-        
-        def create_placeholder_image(filename, title):
-            image = Image.new('RGB', (1200, 800), color='white')
-            draw = ImageDraw.Draw(image)
+        def create_placeholder_image(filename, event_title):
+            # Créer un répertoire pour les images d'événements s'il n'existe pas
+            os.makedirs('static/uploads/events', exist_ok=True)
             
+            # Créer une image de placeholder
+            img = Image.new('RGB', (800, 400), color=(73, 109, 137))
+            d = ImageDraw.Draw(img)
+            
+            # Charger une police
             try:
-                font_title = ImageFont.truetype("arial.ttf", 80)
-                font_subtitle = ImageFont.truetype("arial.ttf", 50)
+                font_title = ImageFont.truetype("arial.ttf", 40)
             except IOError:
                 font_title = ImageFont.load_default()
-                font_subtitle = ImageFont.load_default()
             
-            draw.text((100, 300), title, fill='black', font=font_title)
-            draw.text((100, 450), "Événement PogoParis", fill='gray', font=font_subtitle)
+            # Dessiner le titre de l'événement
+            d.text((50, 150), event_title, font=font_title, fill=(255, 255, 255))
             
-            image.save(f'static/uploads/events/{filename}')
+            # Sauvegarder l'image
+            img.save(f'static/uploads/events/{filename}')
         
         # Créer les événements
         created_events = []
@@ -144,18 +146,6 @@ def seed_events_with_registrations():
             created_events.append(event)
         
         db.session.commit()
-        
-        # Ajouter des inscriptions pour certains événements
-        for event in created_events[:3]:  # Ajouter des inscriptions pour 3 événements
-            for _ in range(5):  # 5 inscriptions par événement
-                registration = Registration(
-                    user_id=utilisateur.id,
-                    event_id=event.id
-                )
-                db.session.add(registration)
-        
-        db.session.commit()
-        
         print("Événements et inscriptions ajoutés avec succès !")
 
 if __name__ == '__main__':
