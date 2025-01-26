@@ -12,9 +12,13 @@
                     Créer un Nouvel Utilisateur ou Administrateur
                 </div>
                 <div class="card-body">
-                    <form method="POST" id="super_admin_form">
+                    <form method="POST" id="super_admin_create_form">
                         {{ form.hidden_tag() }}
-                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            <label for="action" class="form-label">{{ form.action.label }}</label>
+                            {{ form.action(class="form-select", id="action-select") }}
+                        </div>
                         
                         <div class="mb-3">
                             <label for="username" class="form-label">{{ form.username.label }}</label>
@@ -31,13 +35,8 @@
                             {{ form.password(class="form-control") }}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="action" class="form-label">{{ form.action.label }}</label>
-                            {{ form.action(class="form-select") }}
-                        </div>
-                        
                         <div class="d-grid">
-                            {{ form.submit }}
+                            {{ form.submit(class="btn btn-primary", id="submit-button") }}
                         </div>
                     </form>
                 </div>
@@ -159,15 +158,10 @@
                     <tr>
                         <td>{{ user.username }}</td>
                         <td>{{ user.email }}</td>
-                        <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-warning me-2" data-bs-toggle="modal" data-bs-target="#modifyUserModal{{ user.id }}">
-                                Modifier
-                            </button>
-                            <form method="POST" class="d-inline" id="delete_user_form_{{ user.id }}">
-                                {{ delete_user_form.hidden_tag() }}
-                                {{ delete_user_form.csrf_token }}
-                                {{ delete_user_form.user_id(value=user.id) }}
-                                {{ delete_user_form.submit(class="btn btn-sm btn-danger") }}
+                        <td>
+                            <form method="POST" class="d-inline" id="delete_user_form_{{ user.id }}" action="{{ url_for('super_admin') }}">
+                                <input type="hidden" name="user_id" id="user_id_{{ user.id }}" value="{{ user.id }}">
+                                <button type="submit" class="btn btn-sm btn-danger" id="delete_user_submit_{{ user.id }}" name="submit">Supprimer</button>
                             </form>
                         </td>
                     </tr>
@@ -236,4 +230,24 @@
         </div>
     </div>
 </div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const actionSelect = document.getElementById('action-select');
+    const submitButton = document.getElementById('submit-button');
+
+    function updateButtonText() {
+        const selectedOption = actionSelect.options[actionSelect.selectedIndex];
+        submitButton.textContent = selectedOption.text;
+    }
+
+    // Mettre à jour le texte initial
+    updateButtonText();
+
+    // Ajouter un écouteur d'événement pour les changements
+    actionSelect.addEventListener('change', updateButtonText);
+});
+</script>
+{% endblock %}
 {% endblock %}

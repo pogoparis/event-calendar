@@ -1,0 +1,99 @@
+2025-01-26 03:35:36,838 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-01-26 03:35:36,839 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-01-26 03:35:36,842 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 03:35:38,601 - werkzeug - WARNING -  * Debugger is active!
+2025-01-26 03:35:38,616 - werkzeug - INFO -  * Debugger PIN: 112-265-423
+2025-01-26 03:36:24,326 - app - INFO - Temps de requête pour la page d'accueil : 0.0289 secondes
+2025-01-26 03:36:24,398 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:36:24] "GET / HTTP/1.1" 200 -
+2025-01-26 03:36:24,427 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 03:36:24,508 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:36:24] "[35m[1mGET /static/images/default-event.jpg HTTP/1.1[0m" 500 -
+2025-01-26 03:36:24,746 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:36:24] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-01-26 03:36:24,756 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 03:36:24,757 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:36:24] "[36mGET /static/uploads/events/f3e03226-d309-43a3-8af6-a9f4f63b65e4_8578410723989014047.jpg.jpeg HTTP/1.1[0m" 304 -
+2025-01-26 03:36:24,783 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:36:24] "[35m[1mGET /static/images/default-event.jpg HTTP/1.1[0m" 500 -
+2025-01-26 03:38:30,584 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-01-26 03:38:30,586 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-01-26 03:38:30,589 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 03:38:32,182 - werkzeug - WARNING -  * Debugger is active!
+2025-01-26 03:38:32,192 - werkzeug - INFO -  * Debugger PIN: 112-265-423
+2025-01-26 03:38:32,297 - app - INFO - Temps de requête pour la page d'accueil : 0.0264 secondes
+2025-01-26 03:38:32,376 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:38:32] "GET / HTTP/1.1" 200 -
+2025-01-26 03:38:32,420 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 03:38:32,434 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:38:32] "[33mGET /static/images/default-event.jpg HTTP/1.1[0m" 404 -
+2025-01-26 03:38:32,680 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:38:32] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-01-26 03:38:32,692 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 03:38:32,694 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:38:32] "[33mGET /static/images/default-event.jpg HTTP/1.1[0m" 404 -
+2025-01-26 03:38:32,696 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:38:32] "[36mGET /static/uploads/events/f3e03226-d309-43a3-8af6-a9f4f63b65e4_8578410723989014047.jpg.jpeg HTTP/1.1[0m" 304 -
+2025-01-26 03:40:24,330 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-01-26 03:40:24,331 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-01-26 03:40:24,333 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 03:40:25,891 - werkzeug - WARNING -  * Debugger is active!
+2025-01-26 03:40:25,902 - werkzeug - INFO -  * Debugger PIN: 112-265-423
+2025-01-26 03:40:27,797 - app - INFO - Temps de requête pour la page d'accueil : 0.0261 secondes
+2025-01-26 03:40:27,871 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:40:27] "GET / HTTP/1.1" 200 -
+2025-01-26 03:40:27,901 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 03:40:27,911 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:40:27] "[33mGET /static/images/default-event.jpg HTTP/1.1[0m" 404 -
+2025-01-26 03:40:28,228 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:40:28] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-01-26 03:40:28,240 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 03:40:28,244 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:40:28] "[36mGET /static/uploads/events/f3e03226-d309-43a3-8af6-a9f4f63b65e4_8578410723989014047.jpg.jpeg HTTP/1.1[0m" 304 -
+2025-01-26 03:40:28,246 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:40:28] "[33mGET /static/images/default-event.jpg HTTP/1.1[0m" 404 -
+2025-01-26 03:42:29,514 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-01-26 03:42:29,516 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-01-26 03:42:29,518 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 03:42:31,030 - werkzeug - WARNING -  * Debugger is active!
+2025-01-26 03:42:31,045 - werkzeug - INFO -  * Debugger PIN: 112-265-423
+2025-01-26 03:42:40,729 - app - INFO - Temps de requête pour la page d'accueil : 0.0198 secondes
+2025-01-26 03:42:40,783 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:42:40] "GET / HTTP/1.1" 200 -
+2025-01-26 03:42:40,809 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 03:42:40,817 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:42:40] "[33mGET /static/images/default-event.jpg HTTP/1.1[0m" 404 -
+2025-01-26 03:42:41,069 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:42:41] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-01-26 03:42:41,078 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 03:42:41,080 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:42:41] "[36mGET /static/uploads/events/f3e03226-d309-43a3-8af6-a9f4f63b65e4_8578410723989014047.jpg.jpeg HTTP/1.1[0m" 304 -
+2025-01-26 03:42:41,082 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 03:42:41] "[33mGET /static/images/default-event.jpg HTTP/1.1[0m" 404 -
+2025-01-26 03:44:06,350 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-01-26 03:44:06,351 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-01-26 03:44:06,353 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 03:44:08,033 - werkzeug - WARNING -  * Debugger is active!
+2025-01-26 03:44:08,041 - werkzeug - INFO -  * Debugger PIN: 112-265-423
+2025-01-26 11:23:44,864 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-01-26 11:23:44,864 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-01-26 11:23:44,872 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:23:45,739 - werkzeug - WARNING -  * Debugger is active!
+2025-01-26 11:23:45,751 - werkzeug - INFO -  * Debugger PIN: 118-870-469
+2025-01-26 11:24:06,064 - app - INFO - Temps de requête pour la page d'accueil : 0.0289 secondes
+2025-01-26 11:24:06,104 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 11:24:06] "GET / HTTP/1.1" 200 -
+2025-01-26 11:24:06,126 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 11:24:06,131 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 11:24:06] "[33mGET /static/images/default-event.jpg HTTP/1.1[0m" 404 -
+2025-01-26 11:24:06,307 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 11:24:06] "[36mGET /static/uploads/events/f3e03226-d309-43a3-8af6-a9f4f63b65e4_8578410723989014047.jpg.jpeg HTTP/1.1[0m" 304 -
+2025-01-26 11:24:06,312 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 11:24:06] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-01-26 11:24:06,318 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/static/images/default-event.jpg
+2025-01-26 11:24:06,324 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 11:24:06] "[33mGET /static/images/default-event.jpg HTTP/1.1[0m" 404 -
+2025-01-26 11:24:06,401 - app - WARNING - Tentative d'accès à une page non existante - IP: 127.0.0.1, URL: http://127.0.0.1:5000/favicon.ico
+2025-01-26 11:24:06,406 - werkzeug - INFO - 127.0.0.1 - - [26/Jan/2025 11:24:06] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-01-26 11:26:56,997 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Administrateur\\CascadeProjects\\event_manager\\forms.py', reloading
+2025-01-26 11:26:57,129 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:30:47,593 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:34:02,251 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:35:44,343 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:36:00,243 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:36:18,563 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:39:06,342 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:40:45,353 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:42:21,280 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:43:41,084 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:44:53,225 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:47:01,321 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:51:13,317 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 11:52:30,700 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 12:01:14,766 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 12:02:19,501 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 12:03:18,223 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 12:06:49,047 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 12:15:20,823 - werkzeug - INFO -  * Restarting with stat
+2025-01-26 12:16:09,952 - werkzeug - INFO -  * Restarting with stat

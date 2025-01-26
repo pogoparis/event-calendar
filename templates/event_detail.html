@@ -52,23 +52,22 @@
 
 {% block content %}
 <div class="container mt-4 position-relative">
-    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary position-absolute top-0 start-0 m-3">
-        <i class="fas fa-arrow-left"></i> Retour
-    </a>
-
-    <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <h1>{{ event.title }}</h1>
+    <div class="row mb-3 align-items-center">
+        <div class="col-2">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+        <div class="col-8 text-center">
+            <h1 class="mb-0">{{ event.title }}</h1>
+        </div>
+        <div class="col-2 text-end">
             {% if current_user.is_authenticated and (current_user.is_admin or current_user.is_super_admin) %}
                 <form action="{{ url_for('archive_event', event_id=event.id) }}" method="POST" class="d-inline">
                     {{ form.csrf_token }}
                     {% if event.is_active %}
                     <button type="submit" class="btn btn-secondary" onclick="return confirm('Voulez-vous vraiment archiver cet événement ?')">
-                        <i class="fas fa-archive"></i> Archiver l'événement
-                    </button>
-                    {% else %}
-                    <button type="submit" class="btn btn-success" onclick="return confirm('Voulez-vous vraiment désarchiver cet événement ?')">
-                        <i class="fas fa-undo"></i> Désarchiver l'événement
+                        Archiver l'événement
                     </button>
                     {% endif %}
                 </form>
@@ -79,23 +78,58 @@
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div class="card {% if event.is_past_event %}bg-light text-muted{% endif %}">
-                {% if event.is_past_event %}
-                    <div class="alert alert-secondary text-center">
-                        Événement passé
-                    </div>
-                {% endif %}
-                
-                {% if event.image_url %}
-                    <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
-                {% else %}
-                    <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
-                {% endif %}
+                <div class="card">
+                    {% if event.image_url %}
+                        <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
+                    {% endif %}
                 
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
                             <h3>Description</h3>
                             <p>{{ event.description }}</p>
+                            
+                            {% if event.is_registration_possible() %}
+                                {% if current_user.is_authenticated %}
+                                    {% if event.id in user_registrations %}
+                                        <div class="alert alert-success mt-3">
+                                            Vous êtes inscrit à cet événement
+                                            <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}">
+                                                {{ form.hidden_tag() }}
+                                                <div class="d-grid">
+                                                    {{ form.submit(class="btn btn-warning") }}
+                                                </div>
+                                            </form>
+                                        </div>
+                                    {% else %}
+                                        {% set remaining_spots = event.get_remaining_spots() %}
+                                        {% if remaining_spots is none or remaining_spots > 0 %}
+                                            <form method="POST" action="{{ url_for('register_event', event_id=event.id) }}" class="mt-3">
+                                                <div class="d-grid">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        S'inscrire 
+                                                        {% if remaining_spots is not none %}
+                                                            ({{ remaining_spots }} place(s))
+                                                        {% endif %}
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        {% else %}
+                                            <div class="alert alert-danger mt-3">Événement complet</div>
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    <div class="alert alert-info mt-3">
+                                        <a href="{{ url_for('login') }}" class="btn btn-primary">Connectez-vous pour vous inscrire</a>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-warning mt-3">
+                                    Cet événement est terminé. Les inscriptions sont closes.
+                                </div>
+                            {% endif %}
                             
                             <h3>Détails</h3>
                             <ul class="list-unstyled">
@@ -137,46 +171,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    {% if not event.is_past_event %}
-                        {% if current_user.is_authenticated %}
-                            {% if event.id in user_registrations %}
-                                <div class="alert alert-success mt-3">
-                                    Vous êtes inscrit à cet événement
-                                    <form method="POST" action="{{ url_for('unregister_event', event_id=event.id) }}">
-                                        {{ form.hidden_tag() }}
-                                        <div class="d-grid">
-                                            {{ form.submit(class="btn btn-warning") }}
-                                        </div>
-                                    </form>
-                                </div>
-                            {% else %}
-                                {% set remaining_spots = event.get_remaining_spots() %}
-                                {% if remaining_spots is none or remaining_spots > 0 %}
-                                    <form method="POST" action="{{ url_for('register_event', event_id=event.id) }}" class="mt-3">
-                                        <div class="d-grid">
-                                            <button type="submit" class="btn btn-primary">
-                                                S'inscrire 
-                                                {% if remaining_spots is not none %}
-                                                    ({{ remaining_spots }} place(s))
-                                                {% endif %}
-                                            </button>
-                                        </div>
-                                    </form>
-                                {% else %}
-                                    <div class="alert alert-danger mt-3">Événement complet</div>
-                                {% endif %}
-                            {% endif %}
-                        {% else %}
-                            <div class="alert alert-info mt-3">
-                                <a href="{{ url_for('login') }}" class="btn btn-primary">Connectez-vous pour vous inscrire</a>
-                            </div>
-                        {% endif %}
-                    {% else %}
-                        <div class="alert alert-warning mt-3">
-                            Cet événement est terminé. Les inscriptions sont closes.
-                        </div>
-                    {% endif %}
                     
                     {% if current_user.is_authenticated and current_user.is_admin %}
                         <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-warning mt-3">

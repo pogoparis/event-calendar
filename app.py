@@ -60,9 +60,10 @@ def create_app():
             print(f"- {event.title}")
             print(f"  Date : {event.date}")
             print(f"  Est passé : {event.is_past_event()}")
+            print(f"  Est actif : {event.is_active}")
         
         # Catégoriser les événements
-        upcoming_events = [event for event in all_events if not event.is_past_event()]
+        upcoming_events = [event for event in all_events if not event.is_past_event() and event.is_active]
         past_events = [event for event in all_events if event.is_past_event()]
         
         print("\nÉvénements à venir :")
@@ -73,10 +74,6 @@ def create_app():
         for event in past_events:
             print(f"- {event.title} : {event.date}")
         
-        # Séparer les événements archivés
-        archived_events = [event for event in upcoming_events if not event.is_active]
-        upcoming_events = [event for event in upcoming_events if event.is_active]
-        
         # Récupérer les événements inscrits de l'utilisateur
         user_registered_events = []
         if current_user.is_authenticated:
@@ -86,7 +83,6 @@ def create_app():
         
         return render_template('index.html', 
                                upcoming_events=upcoming_events, 
-                               archived_events=archived_events, 
                                past_events=past_events,
                                user_registered_events=user_registered_events,
                                datetime=datetime)
@@ -148,7 +144,8 @@ def create_app():
                                event=event, 
                                registrations=registrations,
                                user_registrations=user_registrations,
-                               form=form)
+                               form=form,
+                               current_time=datetime.now())
 
     @app.route('/event/register/<int:event_id>', methods=['GET', 'POST'])
     @login_required
@@ -231,13 +228,21 @@ def create_app():
         if not registration:
             print(f" Aucune inscription trouvée pour l'événement {event_id}")
             flash('Vous n\'êtes pas inscrit à cet événement', 'danger')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or url_for('index'))
         
-        db.session.delete(registration)
-        db.session.commit()
-        print(f" Désinscription réussie pour l'événement {event_id}")
-        flash('Vous avez été désinscrit de l\'événement', 'success')
-        return redirect(url_for('index'))
+        try:
+            db.session.delete(registration)
+            db.session.commit()
+            print(f" Désinscription réussie pour l'événement {event.title}")
+            flash(f'Vous avez été désinscrit de l\'événement {event.title}', 'success')
+            
+            # Rediriger vers la page précédente, ou la page d'accueil si aucune page précédente n'est trouvée
+            return redirect(request.referrer or url_for('index'))
+        except Exception as e:
+            db.session.rollback()
+            print(f" Erreur lors de la désinscription : {str(e)}")
+            flash('Une erreur est survenue lors de la désinscription', 'danger')
+            return redirect(request.referrer or url_for('index'))
 
     @app.route('/admin')
     @login_required

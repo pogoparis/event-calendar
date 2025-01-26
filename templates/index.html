@@ -17,19 +17,6 @@
     </div>
     {% endif %}
     
-    {% if archived_events %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="border-bottom pb-2">Événements archivés</h2>
-        </div>
-        {% for event in archived_events %}
-            <div class="col-md-4 mb-4">
-                {% include 'event_card.html' with context %}
-            </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    
     {% if past_events %}
     <div class="row mb-4">
         <div class="col-12">
@@ -43,7 +30,7 @@
     </div>
     {% endif %}
     
-    {% if not (upcoming_events or archived_events or past_events) %}
+    {% if not (upcoming_events or past_events) %}
     <div class="alert alert-info text-center">
         Aucun événement n'est actuellement disponible.
     </div>

@@ -47,32 +47,36 @@ class Event(db.Model):
     registrations = db.relationship('Registration', backref='event', lazy='dynamic')
 
     def is_past_event(self):
-        # Débogage complet avec informations détaillées
-        import traceback
-        
+        # Utiliser datetime.now() avec timezone aware si possible
         current_time = datetime.now()
         
-        # Logs détaillés
-        print("\n--- DÉBOGAGE ÉVÉNEMENT ---")
-        print(f"Titre de l'événement : {self.title}")
-        print(f"Date de l'événement : {self.date}")
-        print(f"Date actuelle : {current_time}")
-        print(f"Année de l'événement : {self.date.year}")
-        print(f"Année actuelle : {current_time.year}")
+        # Comparaison explicite et détaillée
+        is_past = False
         
-        # Comparaison année par année
-        is_past = (
-            self.date.year < current_time.year or 
-            (self.date.year == current_time.year and 
-             (self.date.month < current_time.month or 
-              (self.date.month == current_time.month and 
-               self.date.day < current_time.day)))
-        )
-        
-        print(f"Est-ce un événement passé ? {is_past}")
-        print("Trace de la pile :")
-        traceback.print_stack()
-        print("--- FIN DÉBOGAGE ---\n")
+        # Comparer année
+        if self.date.year < current_time.year:
+            is_past = True
+        # Si même année, comparer mois
+        elif self.date.year == current_time.year and self.date.month < current_time.month:
+            is_past = True
+        # Si même année et même mois, comparer jour
+        elif (self.date.year == current_time.year and 
+              self.date.month == current_time.month and 
+              self.date.day < current_time.day):
+            is_past = True
+        # Si même année, même mois, même jour, comparer heure
+        elif (self.date.year == current_time.year and 
+              self.date.month == current_time.month and 
+              self.date.day == current_time.day and 
+              self.date.hour < current_time.hour):
+            is_past = True
+        # Si même année, même mois, même jour, même heure, comparer minute
+        elif (self.date.year == current_time.year and 
+              self.date.month == current_time.month and 
+              self.date.day == current_time.day and 
+              self.date.hour == current_time.hour and 
+              self.date.minute < current_time.minute):
+            is_past = True
         
         return is_past
 
