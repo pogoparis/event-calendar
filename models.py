@@ -3,6 +3,7 @@ from flask_login import UserMixin
 from datetime import datetime
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
 class User(UserMixin, db.Model):
     """
@@ -157,6 +158,31 @@ class Event(db.Model):
         :return: Nombre de places restantes ou infini si pas de limite
         """
         return self.capacity - self.get_registration_count() if self.capacity else float('inf')
+
+    def get_event_image(self):
+        """
+        Retourne le chemin de l'image de l'événement.
+        Si aucune image n'est définie, retourne une image par défaut.
+        """
+        if self.image_url and os.path.exists(os.path.join('static', self.image_url)):
+            return self.image_url
+        
+        # Dictionnaire de mapping des catégories d'événements
+        event_categories = {
+            'Conférence': 'conference.jpg',
+            'Festival': 'festival.jpg',
+            'Salon': 'salon.jpg',
+            'Marathon': 'marathon.jpg',
+            'Atelier': 'atelier.jpg'
+        }
+        
+        # Trouver la catégorie correspondante
+        for category, default_image in event_categories.items():
+            if category.lower() in self.title.lower():
+                return f'images/default/{default_image}'
+        
+        # Image générique par défaut si aucune correspondance
+        return 'images/default/event_default.jpg'
 
 class Registration(db.Model):
     """

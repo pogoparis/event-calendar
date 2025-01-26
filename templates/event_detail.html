@@ -84,11 +84,11 @@
                     </div>
                 {% endif %}
                 
-                {% if event.image_url %}
-                    <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
-                {% else %}
-                    <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
-                {% endif %}
+                <img src="{{ event.get_event_image() }}" 
+                     class="img-fluid rounded mb-4" 
+                     alt="{{ event.title }}"
+                     onerror="this.src='{{ url_for('static', filename='images/default/event_default.jpg') }}'"
+                     style="width: 100%; max-height: 400px; object-fit: cover;">
                 
                 <div class="card-body">
                     <div class="row">
