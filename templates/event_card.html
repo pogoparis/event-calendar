@@ -9,16 +9,19 @@
     
     <div class="card-body flex-grow-1">
         <h5 class="card-title">{{ event.title }}</h5>
-        <p class="card-text">{{ event.description|truncate(150) }}</p>
-        <p>
-            <strong>Date:</strong> {{ event.date.strftime('%d/%m/%Y %H:%M') }}<br>
-            <strong>Lieu:</strong> {{ event.location }}<br>
-            <strong>Adresse:</strong> {{ event.address }}<br>
-            <strong>Organisateur:</strong> {{ event.organizer }}
-            {% if event.price is not none %}
-                <br><strong>Prix:</strong> {{ event.price }}€
+        <p class="card-text">
+            <strong><i class="fas fa-calendar"></i> Date :</strong> {{ event.date.strftime('%d %B %Y à %H:%M') }}<br>
+            <strong><i class="fas fa-map-marker-alt"></i> Lieu :</strong> {{ event.location }}<br>
+            <strong><i class="fas fa-users"></i> Inscrits :</strong> {{ event.get_registration_count() }}
+            
+            {% set remaining_spots = event.get_remaining_spots() %}
+            {% if event.max_participants is not none %}
+                {% if remaining_spots is not none and remaining_spots > 0 %}
+                    <span class="badge bg-info ms-2">{{ remaining_spots }} places restantes</span>
+                {% elif remaining_spots == 0 %}
+                    <span class="badge bg-danger ms-2">Complet</span>
+                {% endif %}
             {% endif %}
-            <br><strong>Inscrits:</strong> {{ event.get_registration_count() }}
         </p>
     </div>
     <div class="card-footer d-flex flex-column">

@@ -12,8 +12,9 @@
                     Créer un Nouvel Utilisateur ou Administrateur
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" id="create-user-form">
                         {{ create_form.hidden_tag() }}
+                        <input type="hidden" name="csrf_token" id="csrf_token_create" value="{{ create_form.csrf_token.current_token }}">
                         
                         <div class="mb-3">
                             {{ create_form.action.label(class="form-label") }}
@@ -76,8 +77,9 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form method="POST">
+                                            <form method="POST" id="modify-admin-form-{{ admin.id }}">
                                                 {{ modify_user_form.hidden_tag() }}
+                                                <input type="hidden" name="csrf_token" id="csrf_token_modify_admin_{{ admin.id }}" value="{{ modify_user_form.csrf_token.current_token }}">
                                                 <input type="hidden" name="user_id" value="{{ admin.id }}">
                                                 
                                                 <div class="mb-3">
@@ -117,8 +119,9 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form method="POST">
+                                            <form method="POST" id="delete-admin-form-{{ admin.id }}">
                                                 {{ delete_user_form.hidden_tag() }}
+                                                <input type="hidden" name="csrf_token" id="csrf_token_delete_admin_{{ admin.id }}" value="{{ delete_user_form.csrf_token.current_token }}">
                                                 <input type="hidden" name="user_id" value="{{ admin.id }}">
                                                 
                                                 <p>Êtes-vous sûr de vouloir supprimer l'administrateur {{ admin.username }} ?</p>
@@ -172,8 +175,9 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form method="POST">
+                                            <form method="POST" id="modify-user-form-{{ user.id }}">
                                                 {{ modify_user_form.hidden_tag() }}
+                                                <input type="hidden" name="csrf_token" id="csrf_token_modify_user_{{ user.id }}" value="{{ modify_user_form.csrf_token.current_token }}">
                                                 <input type="hidden" name="user_id" value="{{ user.id }}">
                                                 
                                                 <div class="mb-3">
@@ -213,8 +217,9 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form method="POST">
+                                            <form method="POST" id="delete-user-form-{{ user.id }}">
                                                 {{ delete_user_form.hidden_tag() }}
+                                                <input type="hidden" name="csrf_token" id="csrf_token_delete_user_{{ user.id }}" value="{{ delete_user_form.csrf_token.current_token }}">
                                                 <input type="hidden" name="user_id" value="{{ user.id }}">
                                                 
                                                 <p>Êtes-vous sûr de vouloir supprimer l'utilisateur {{ user.username }} ?</p>
