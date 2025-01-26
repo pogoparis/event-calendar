@@ -78,12 +78,17 @@
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div class="card {% if event.is_past_event %}bg-light text-muted{% endif %}">
-                <div class="card">
-                    {% if event.image_url %}
-                        <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
-                    {% endif %}
+                {% if event.is_past_event() %}
+                    <div class="alert alert-secondary text-center">
+                        Événement passé
+                    </div>
+                {% endif %}
+                
+                {% if event.image_url %}
+                    <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 400px; object-fit: cover;">
+                {% endif %}
                 
                 <div class="card-body">
                     <div class="row">
