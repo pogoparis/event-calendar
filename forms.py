@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, IntegerField, FloatField, SelectField, SubmitField, HiddenField, FileField
 from wtforms.validators import DataRequired, Optional, Email, Length, Regexp, URL, NumberRange, ValidationError
 from datetime import datetime
-import re
+import re  # Ajout de l'import pour les expressions régulières
 
 # Fonctions de validation personnalisées pour différents types de champs
 
@@ -83,8 +83,11 @@ def validate_email(form, field):
     :param field: Le champ à valider
     :raises ValidationError: Si l'email n'est pas au bon format
     """
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", field.data):
-        raise ValidationError('Adresse email invalide')
+    print(f"Validation de l'email : {field.data}")  # Ajout d'un print de débogage
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_regex, field.data):
+        print(f"Email invalide : {field.data}")  # Ajout d'un print de débogage
+        raise ValidationError('Adresse email invalide. Veuillez saisir une adresse email valide (exemple: nom@domaine.com).')
 
 # Définition des différents formulaires de l'application
 
@@ -201,7 +204,7 @@ class ModifyUserForm(FlaskForm):
     ])
     email = StringField('Email', validators=[
         DataRequired(message='L\'email est requis'),
-        Email(message='Email invalide')
+        validate_email
     ])
     password = PasswordField('Nouveau mot de passe (optionnel)', validators=[
         Optional(),

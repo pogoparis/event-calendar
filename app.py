@@ -557,11 +557,20 @@ def create_app():
                 except CustomValidationError as e:
                     db.session.rollback()
                     flash(str(e), 'danger')
+                
                 except Exception as e:
                     db.session.rollback()
                     log_error('error', 'Erreur lors de la création d\'un utilisateur', str(e))
-                    flash('Une erreur est survenue lors de la création.', 'error')
-
+                    flash('Une erreur est survenue lors de la création de l\'utilisateur', 'danger')
+            
+            else:
+                # Gestion détaillée des erreurs de validation
+                if form.errors:
+                    for field, errors in form.errors.items():
+                        for error in errors:
+                            print(f"Erreur de validation pour {field}: {error}")
+                            flash(f"Erreur dans le champ {field}: {error}", 'danger')
+            
             return render_template('super_admin.html', 
                                    create_form=form, 
                                    delete_user_form=delete_user_form,
