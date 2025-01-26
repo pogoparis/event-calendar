@@ -398,7 +398,7 @@ def create_app():
                     new_event.image_url = f'/static/uploads/events/{filename}'
                 else:
                     # Image par défaut si aucune image n'est téléchargée
-                    new_event.image_url = '/static/images/default-event.jpg'
+                    new_event.image_url = '/static/images/default/event.jpg'
                 
                 db.session.add(new_event)
                 db.session.commit()
@@ -453,6 +453,9 @@ def create_app():
                     
                     # Enregistrer le chemin de l'image
                     event.image_url = f'/static/uploads/events/{filename}'
+                else:
+                    # Image par défaut si aucune image n'est téléchargée
+                    event.image_url = '/static/images/default/event.jpg'
                 
                 # Convertir la date et l'heure
                 date_str = form.event_date.data

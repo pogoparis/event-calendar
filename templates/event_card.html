@@ -6,7 +6,7 @@
     {% if event.image_url %}
         <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
     {% else %}
-        <img src="{{ url_for('static', filename='images/default-event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+        <img src="{{ url_for('static', filename='images/default/event.jpg') }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
     {% endif %}
     
     <div class="card-body flex-grow-1">

@@ -164,8 +164,31 @@ class Event(db.Model):
         Retourne le chemin de l'image de l'événement.
         Si aucune image n'est définie, retourne une image par défaut.
         """
-        if self.image_url and os.path.exists(os.path.join('static', self.image_url)):
-            return self.image_url
+        # Vérifier si image_url est définie et non vide
+        if self.image_url:
+            # Chemins de base
+            base_paths = [
+                'static',
+                'C:/Users/Administrateur/CascadeProjects/event_manager/static'
+            ]
+            
+            # Extraire le nom de fichier
+            filename = os.path.basename(self.image_url.replace('/static/uploads/events/', ''))
+            
+            # Liste des chemins possibles à vérifier
+            possible_paths = []
+            for base_path in base_paths:
+                possible_paths.extend([
+                    os.path.join(base_path, 'uploads', 'events', filename),
+                    os.path.join(base_path, 'uploads', 'events', os.path.basename(filename)),
+                    os.path.join(base_path, self.image_url.replace('/static/', ''))
+                ])
+            
+            # Vérifier chaque chemin possible
+            for path in possible_paths:
+                if os.path.exists(path):
+                    # Retourner le chemin exact comme stocké dans la base de données
+                    return self.image_url.replace('/static/', '')
         
         # Dictionnaire de mapping des catégories d'événements
         event_categories = {
@@ -182,7 +205,7 @@ class Event(db.Model):
                 return f'images/default/{default_image}'
         
         # Image générique par défaut si aucune correspondance
-        return 'images/default/event_default.jpg'
+        return 'images/default/event.jpg'
 
 class Registration(db.Model):
     """

@@ -9,8 +9,8 @@
             {% for event in events %}
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 {% if not event.is_active %}border-warning{% endif %}">
-                        <img src="{{ event.get_event_image() }}" class="card-img-top event-image" alt="{{ event.title }}" 
-                             onerror="this.src='{{ url_for('static', filename='images/default/event_default.jpg') }}'"
+                        <img src="{{ url_for('static', filename=event.get_event_image()) }}" class="card-img-top event-image" alt="{{ event.title }}" 
+                             onerror="this.src='{{ url_for('static', filename='images/default/event.jpg') }}'"
                              style="height: 200px; object-fit: cover;">
                         
                         <div class="card-body">
