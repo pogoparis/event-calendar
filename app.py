@@ -169,6 +169,7 @@ class Event(db.Model):
     additional_info = db.Column(db.Text, nullable=True)
     address = db.Column(db.String(300), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
+    image_url = db.Column(db.String(300), nullable=True)  # Ajout de l'attribut image_url
     registrations = db.relationship('Registration', backref='event', lazy='dynamic')
     
     @property

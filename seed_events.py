@@ -2,36 +2,33 @@ from app import app, db, Event, User, Registration
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash
 import os
-from PIL import Image, ImageDraw, ImageFont
 
 def seed_events_with_registrations():
     with app.app_context():
-        # Supprimer les données existantes
+        # Supprimer tous les événements existants
         db.session.query(Registration).delete()
         db.session.query(Event).delete()
+        db.session.query(User).delete()
+        db.session.commit()
         
-        # Créer des utilisateurs si nécessaire
-        admin = User.query.filter_by(username='pogoparis').first()
-        if not admin:
-            admin = User(
-                username='pogoparis',
-                email='admin@example.com',
-                password_hash=generate_password_hash('AdminPassword123!')
-            )
-            admin.is_admin = True
-            admin.is_super_admin = True
-            db.session.add(admin)
+        # Créer des utilisateurs
+        admin = User(
+            username='pogoparis',
+            email='admin@example.com',
+            password_hash=generate_password_hash('AdminPassword123!')
+        )
+        admin.is_admin = True
+        admin.is_super_admin = True
+        db.session.add(admin)
         
-        utilisateur = User.query.filter_by(username='utilisateur').first()
-        if not utilisateur:
-            utilisateur = User(
-                username='utilisateur',
-                email='utilisateur@example.com',
-                password_hash=generate_password_hash('UserPassword123!')
-            )
-            utilisateur.is_admin = False
-            utilisateur.is_super_admin = False
-            db.session.add(utilisateur)
+        utilisateur = User(
+            username='utilisateur',
+            email='utilisateur@example.com',
+            password_hash=generate_password_hash('UserPassword123!')
+        )
+        utilisateur.is_admin = False
+        utilisateur.is_super_admin = False
+        db.session.add(utilisateur)
         
         db.session.commit()
         
@@ -49,8 +46,7 @@ def seed_events_with_registrations():
                 'capacity': 200,
                 'price': 99.99,
                 'address': '2 Place de la Porte Maillot, 75017 Paris',
-                'is_active': True,
-                'image_filename': 'tech_conference.jpg'
+                'is_active': True
             },
             {
                 'title': 'Festival de Musique Électronique',
@@ -61,8 +57,7 @@ def seed_events_with_registrations():
                 'capacity': 5000,
                 'price': 149.50,
                 'address': 'Rue de la Villette, 69003 Lyon',
-                'is_active': True,
-                'image_filename': 'electro_festival.jpg'
+                'is_active': True
             },
             {
                 'title': 'Salon du Vin et des Gastronomies',
@@ -73,8 +68,7 @@ def seed_events_with_registrations():
                 'capacity': 1000,
                 'price': 25.00,
                 'address': 'Rue Jean Samazeuilh, 33300 Bordeaux',
-                'is_active': True,
-                'image_filename': 'wine_salon.jpg'
+                'is_active': True
             },
             {
                 'title': 'Marathon de Paris',
@@ -85,8 +79,7 @@ def seed_events_with_registrations():
                 'capacity': 40000,
                 'price': 120.00,
                 'address': 'Avenue des Champs-Élysées, 75008 Paris',
-                'is_active': True,
-                'image_filename': 'paris_marathon.jpg'
+                'is_active': True
             },
             {
                 'title': 'Atelier de Cuisine Française',
@@ -97,37 +90,13 @@ def seed_events_with_registrations():
                 'capacity': 20,
                 'price': 75.50,
                 'address': '12 Rue de la Cuisine, 75001 Paris',
-                'is_active': True,
-                'image_filename': 'cuisine_francaise.jpg'
+                'is_active': True
             }
         ]
-        
-        def create_placeholder_image(filename, event_title):
-            # Créer un répertoire pour les images d'événements s'il n'existe pas
-            os.makedirs('static/uploads/events', exist_ok=True)
-            
-            # Créer une image de placeholder
-            img = Image.new('RGB', (800, 400), color=(73, 109, 137))
-            d = ImageDraw.Draw(img)
-            
-            # Charger une police
-            try:
-                font_title = ImageFont.truetype("arial.ttf", 40)
-            except IOError:
-                font_title = ImageFont.load_default()
-            
-            # Dessiner le titre de l'événement
-            d.text((50, 150), event_title, font=font_title, fill=(255, 255, 255))
-            
-            # Sauvegarder l'image
-            img.save(f'static/uploads/events/{filename}')
         
         # Créer les événements
         created_events = []
         for event_info in events_data:
-            # Créer l'image de placeholder
-            create_placeholder_image(event_info['image_filename'], event_info['title'])
-            
             # Créer l'événement
             event = Event(
                 title=event_info['title'],
@@ -140,7 +109,6 @@ def seed_events_with_registrations():
                 address=event_info['address']
             )
             event.is_active = event_info['is_active']
-            event.image_url = f'/static/uploads/events/{event_info["image_filename"]}'
             
             db.session.add(event)
             created_events.append(event)
