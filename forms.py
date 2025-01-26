@@ -83,10 +83,34 @@ def validate_email(form, field):
     :param field: Le champ à valider
     :raises ValidationError: Si l'email n'est pas au bon format
     """
-    print(f"Validation de l'email : {field.data}")  # Ajout d'un print de débogage
+    if not field.data:
+        raise ValidationError('L\'email est obligatoire')
+    
+    # Vérifier la présence du "@"
+    if '@' not in field.data:
+        raise ValidationError('L\'adresse email doit contenir le symbole "@"')
+    
+    # Séparer le nom et le domaine
+    try:
+        username, domain = field.data.split('@')
+    except ValueError:
+        raise ValidationError('Format d\'email invalide')
+    
+    # Vérifier que le nom et le domaine ne sont pas vides
+    if not username or not domain:
+        raise ValidationError('L\'adresse email doit avoir un nom et un domaine')
+    
+    # Vérifier la présence d'un point dans le domaine
+    if '.' not in domain:
+        raise ValidationError('Le domaine de l\'email doit contenir un point')
+    
+    # Vérifier la longueur minimale des parties
+    if len(username) < 1 or len(domain.split('.')[0]) < 1:
+        raise ValidationError('Le nom et le domaine de l\'email sont trop courts')
+    
+    # Vérification finale avec une regex plus stricte
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(email_regex, field.data):
-        print(f"Email invalide : {field.data}")  # Ajout d'un print de débogage
         raise ValidationError('Adresse email invalide. Veuillez saisir une adresse email valide (exemple: nom@domaine.com).')
 
 # Définition des différents formulaires de l'application
